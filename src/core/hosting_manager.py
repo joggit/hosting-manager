@@ -135,7 +135,7 @@ class HostingManager:
             # Setup PM2 if available
             self._setup_pm2()
 
-            # Create systemd service
+            # Create systemd service - FIXED VERSION
             if not self.readonly_filesystem:
                 self._create_systemd_service()
 
@@ -376,11 +376,15 @@ class HostingManager:
             return False
 
     def _create_systemd_service(self):
-        """Create systemd service for the API"""
+        """Create systemd service for the API - FIXED VERSION"""
         if self.readonly_filesystem:
             return True
 
         try:
+            # FIXED: Point to the correct main script location
+            main_script_path = "/opt/hosting-manager/hosting_manager.py"
+            working_directory = "/opt/hosting-manager"
+
             service_content = f"""[Unit]
 Description=Hosting Manager API v3.0
 After=network.target nginx.service
@@ -389,9 +393,10 @@ After=network.target nginx.service
 Type=simple
 User=root
 Group=root
-WorkingDirectory={os.path.dirname(os.path.abspath(__file__))}
-Environment=PYTHONPATH={os.path.dirname(os.path.abspath(__file__))}
-ExecStart=/usr/bin/python3 {os.path.abspath(__file__)} --api
+WorkingDirectory={working_directory}
+Environment=PYTHONPATH={working_directory}
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 {main_script_path} --api
 Restart=always
 RestartSec=3
 

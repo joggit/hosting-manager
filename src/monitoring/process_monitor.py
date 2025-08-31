@@ -602,6 +602,141 @@ class ProcessMonitor:
 
         return []
 
+    def get_pm2_status(self):
+        """Get comprehensive PM2 daemon status"""
+        if not self.pm2_available:
+            return {"available": False, "error": "PM2 not installed or not available"}
+
+        try:
+            status_info = {"available": True, "timestamp": datetime.now().isoformat()}
+
+            # Get PM2 version
+            try:
+                version_result = subprocess.run(
+                    ["pm2", "--version"], capture_output=True, text=True
+                )
+                if version_result.returncode == 0:
+                    status_info["version"] = version_result.stdout.strip()
+                else:
+                    status_info["version"] = "unknown"
+            except Exception as e:
+                status_info["version"] = f"error: {e}"
+
+            # Get PM2 status (ping)
+            try:
+                ping_result = subprocess.run(
+                    ["pm2", "ping"], capture_output=True, text=True, timeout=10
+                )
+                status_info["daemon_running"] = ping_result.returncode == 0
+                if ping_result.returncode == 0:
+                    status_info["ping_response"] = ping_result.stdout.strip()
+                else:
+                    status_info["ping_error"] = ping_result.stderr.strip()
+            except subprocess.TimeoutExpired:
+                status_info["daemon_running"] = False
+                status_info["ping_error"] = "timeout"
+            except Exception as e:
+                status_info["daemon_running"] = False
+                status_info["ping_error"] = str(e)
+
+            # Get PM2 home directory
+            status_info["pm2_home"] = os.environ.get("PM2_HOME", "default")
+
+            # Get process count
+            try:
+                list_result = subprocess.run(
+                    ["pm2", "jlist"], capture_output=True, text=True
+                )
+                if list_result.returncode == 0:
+                    processes = json.loads(list_result.stdout)
+                    status_info["process_count"] = len(processes)
+
+                    # Process status summary
+                    online_count = len(
+                        [
+                            p
+                            for p in processes
+                            if p.get("pm2_env", {}).get("status") == "online"
+                        ]
+                    )
+                    stopped_count = len(
+                        [
+                            p
+                            for p in processes
+                            if p.get("pm2_env", {}).get("status") == "stopped"
+                        ]
+                    )
+                    errored_count = len(
+                        [
+                            p
+                            for p in processes
+                            if p.get("pm2_env", {}).get("status") == "errored"
+                        ]
+                    )
+
+                    status_info["process_summary"] = {
+                        "online": online_count,
+                        "stopped": stopped_count,
+                        "errored": errored_count,
+                        "total": len(processes),
+                    }
+
+                    # Get memory/cpu usage if processes exist
+                    if processes:
+                        total_memory = sum(
+                            p.get("monit", {}).get("memory", 0) for p in processes
+                        )
+                        avg_cpu = sum(
+                            p.get("monit", {}).get("cpu", 0) for p in processes
+                        ) / len(processes)
+
+                        status_info["resource_usage"] = {
+                            "total_memory_bytes": total_memory,
+                            "total_memory_mb": round(total_memory / 1024 / 1024, 2),
+                            "average_cpu_percent": round(avg_cpu, 2),
+                        }
+                else:
+                    status_info["process_count"] = 0
+                    status_info["list_error"] = list_result.stderr.strip()
+            except Exception as e:
+                status_info["process_count"] = 0
+                status_info["list_error"] = str(e)
+
+            # Get system info if daemon is running
+            if status_info.get("daemon_running"):
+                try:
+                    # Try to get PM2 status
+                    status_result = subprocess.run(
+                        ["pm2", "status"], capture_output=True, text=True
+                    )
+                    status_info["status_command_available"] = (
+                        status_result.returncode == 0
+                    )
+                except:
+                    status_info["status_command_available"] = False
+
+                # Check if logs are accessible
+                try:
+                    logs_result = subprocess.run(
+                        ["pm2", "logs", "--lines", "1"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    status_info["logs_available"] = logs_result.returncode == 0
+                except:
+                    status_info["logs_available"] = False
+
+            return status_info
+
+        except Exception as e:
+            self.logger.error(f"Failed to get PM2 status: {e}")
+            return {
+                "available": True,
+                "error": f"Failed to get status: {e}",
+                "timestamp": datetime.now().isoformat(),
+            }
+
     def pm2_action(self, process_name, action):
         """Perform PM2 action on a process"""
         if not self.pm2_available:

@@ -1,6 +1,7 @@
 # src/api/server.py
 """
 Flask API server with comprehensive process monitoring and PM2 support
+Added PM2 status endpoint
 """
 
 from flask import Flask, request, jsonify
@@ -461,6 +462,23 @@ class HostingAPI:
 
             except Exception as e:
                 self.logger.error(f"Metrics collection failed: {e}")
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route("/api/pm2/status", methods=["GET"])
+        def get_pm2_status():
+            """Get PM2 daemon status and information"""
+            try:
+                if not self.process_monitor.pm2_available:
+                    return (
+                        jsonify({"success": False, "error": "PM2 not available"}),
+                        400,
+                    )
+
+                pm2_status = self.process_monitor.get_pm2_status()
+                return jsonify({"success": True, "pm2_status": pm2_status})
+
+            except Exception as e:
+                self.logger.error(f"PM2 status check failed: {e}")
                 return jsonify({"success": False, "error": str(e)}), 500
 
         @self.app.route("/api/pm2/list", methods=["GET"])
