@@ -8,6 +8,7 @@ Handles environment variables, config files, and defaults
 import os
 import json
 from pathlib import Path
+import shutil
 
 
 class Config:

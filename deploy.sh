@@ -1,6 +1,6 @@
 #!/bin/bash
-# deploy.sh - Complete Next.js Multisite Hosting Platform Deployment
-# Includes: Core hosting, PM2 management, and Next.js monitoring extension
+# deploy.sh - Complete Next.js Multisite Hosting Platform with Integrated Monitoring
+# Includes: Core hosting, PM2 management, Next.js monitoring, and all helper methods
 
 set -e
 
@@ -25,6 +25,7 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 required_files=(
     "hosting_manager.py"
     "src/api/server.py"
+    "src/api/nextjs_monitoring.py"
     "src/core/hosting_manager.py"
     "src/monitoring/process_monitor.py"
     "src/monitoring/health_checker.py"
@@ -52,8 +53,8 @@ tar -czf hosting-manager.tar.gz \
 print_status "Uploading to server $REMOTE_HOST..."
 scp hosting-manager.tar.gz "${REMOTE_USER}@${REMOTE_HOST}:/tmp/"
 
-# Deploy on remote server
-print_status "Setting up on remote server..."
+# Main deployment on remote server
+print_status "Deploying complete hosting platform..."
 ssh "${REMOTE_USER}@${REMOTE_HOST}" << 'REMOTE_SCRIPT'
 set -e
 
@@ -158,6 +159,367 @@ config = Config()
 logger = Logger()
 print('Database ready')
 "
+
+echo "[REMOTE] === ADDING MONITORING HELPER METHODS TO API SERVER ==="
+echo "[REMOTE] Integrating Next.js monitoring functionality directly..."
+
+# Add all the missing helper methods to the API server
+cat >> src/api/server.py << 'MONITORING_METHODS_EOF'
+
+    # =================================================================
+    # NEXT.JS MONITORING HELPER METHODS - INTEGRATED DIRECTLY
+    # =================================================================
+
+    def _get_system_health(self):
+        """Get overall system health indicators"""
+        try:
+            import psutil
+            cpu_usage = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            return {
+                "status": "healthy" if cpu_usage < 80 and memory.percent < 80 and disk.percent < 90 else "warning",
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory.percent,
+                "disk_usage": disk.percent,
+                "load_average": os.getloadavg()[0],
+                "uptime": time.time() - psutil.boot_time(),
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {"status": "error", "error": str(e)}
+
+    def _get_all_app_health(self):
+        """Get health status for all Next.js applications"""
+        try:
+            apps = []
+            processes = self.process_monitor.get_all_processes()
+            domains = self.hosting_manager.list_domains()
+            
+            for domain in domains:
+                if domain.get("site_type") in ["node", "app"]:
+                    domain_name = domain["domain_name"]
+                    
+                    # Find associated process
+                    app_process = next((p for p in processes if p["name"] == domain_name), None)
+                    
+                    # Get health check data
+                    health_data = self.health_checker.get_domain_health(domain_name)
+                    
+                    app_info = {
+                        "name": domain_name,
+                        "port": domain["port"],
+                        "status": app_process["status"] if app_process else "unknown",
+                        "health": health_data.get("status", "unknown"),
+                        "memory": app_process.get("memory", "N/A") if app_process else "N/A",
+                        "cpu": app_process.get("cpu", "N/A") if app_process else "N/A",
+                        "restart_count": app_process.get("restart_count", 0) if app_process else 0,
+                        "response_time": health_data.get("response_time"),
+                        "last_health_check": health_data.get("last_check")
+                    }
+                    apps.append(app_info)
+            
+            return apps
+        except Exception as e:
+            self.logger.error(f"App health check failed: {e}")
+            return []
+
+    def _get_infrastructure_status(self):
+        """Get infrastructure component status"""
+        return {
+            "nginx": {
+                "status": "running" if self.hosting_manager._check_service_status("nginx") else "stopped",
+                "config_valid": self.hosting_manager._test_nginx_config()
+            },
+            "pm2": {
+                "available": self.process_monitor.pm2_available,
+                "daemon_running": self._check_pm2_daemon(),
+                "process_count": len(self.process_monitor.get_pm2_processes()) if self.process_monitor.pm2_available else 0
+            },
+            "database": {
+                "connected": self.hosting_manager.get_database_connection() is not None
+            },
+            "monitoring": {
+                "process_monitor": self.process_monitor.is_monitoring_active(),
+                "health_checker": self.health_checker.is_active()
+            }
+        }
+
+    def _get_active_alerts(self):
+        """Get active system alerts"""
+        return self._generate_alerts()
+
+    def _get_performance_metrics(self):
+        """Get key performance metrics"""
+        try:
+            processes = self.process_monitor.get_all_processes()
+            
+            return {
+                "total_memory_usage": sum(self._parse_memory(p.get("memory", "0MB")) for p in processes),
+                "average_cpu_usage": sum(self._parse_cpu(p.get("cpu", "0%")) for p in processes) / max(len(processes), 1),
+                "active_connections": self._get_active_connections(),
+                "response_times": self._get_average_response_times(),
+                "error_rates": self._get_error_rates()
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    def _get_dashboard_summary(self):
+        """Get dashboard summary statistics"""
+        try:
+            domains = self.hosting_manager.list_domains()
+            processes = self.process_monitor.get_all_processes()
+            
+            total_sites = len([d for d in domains if d.get("site_type") in ["node", "app"]])
+            healthy_sites = len([d for d in domains if self.health_checker.get_domain_health(d["domain_name"]).get("status") == "healthy"])
+            
+            return {
+                "total_sites": total_sites,
+                "healthy_sites": healthy_sites,
+                "unhealthy_sites": total_sites - healthy_sites,
+                "total_processes": len(processes),
+                "running_processes": len([p for p in processes if p["status"] == "online"]),
+                "system_health": "healthy" if self._get_cpu_usage() < 80 and self._get_memory_usage() < 80 else "warning"
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    def _get_site_detailed_status(self, domain, processes):
+        """Get detailed status for a single site"""
+        domain_name = domain["domain_name"]
+        
+        # Find associated process
+        site_process = next((p for p in processes if p["name"] == domain_name), None)
+        
+        # Get health data
+        health_data = self.health_checker.get_domain_health(domain_name)
+        
+        # Determine overall status
+        process_status = site_process["status"] if site_process else "unknown"
+        health_status = health_data.get("status", "unknown")
+        
+        if process_status == "online" and health_status == "healthy":
+            overall_status = "healthy"
+        elif process_status == "online" and health_status != "healthy":
+            overall_status = "degraded"
+        else:
+            overall_status = "unhealthy"
+        
+        return {
+            "domain_name": domain_name,
+            "port": domain["port"],
+            "site_type": domain["site_type"],
+            "overall_status": overall_status,
+            "process": {
+                "status": process_status,
+                "pid": site_process.get("pid") if site_process else None,
+                "memory": site_process.get("memory", "N/A") if site_process else "N/A",
+                "cpu": site_process.get("cpu", "N/A") if site_process else "N/A",
+                "restart_count": site_process.get("restart_count", 0) if site_process else 0,
+                "process_manager": site_process.get("process_manager", "unknown") if site_process else "unknown"
+            },
+            "health": {
+                "status": health_status,
+                "response_time": health_data.get("response_time"),
+                "last_check": health_data.get("last_check"),
+                "consecutive_failures": health_data.get("consecutive_failures", 0),
+                "uptime_percentage": health_data.get("uptime_percentage", 0)
+            },
+            "ssl_enabled": domain.get("ssl_enabled", False),
+            "created_at": domain.get("created_at"),
+            "url": f"http://{domain_name}"
+        }
+
+    def _generate_alerts(self):
+        """Generate system alerts based on current status"""
+        alerts = []
+        
+        try:
+            import psutil
+            
+            # System resource alerts
+            cpu_usage = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            if cpu_usage > 90:
+                alerts.append({
+                    "id": "cpu_critical",
+                    "severity": "critical",
+                    "title": "High CPU Usage",
+                    "message": f"CPU usage is {cpu_usage:.1f}%",
+                    "timestamp": datetime.now().isoformat(),
+                    "category": "system"
+                })
+            elif cpu_usage > 80:
+                alerts.append({
+                    "id": "cpu_warning",
+                    "severity": "warning", 
+                    "title": "Elevated CPU Usage",
+                    "message": f"CPU usage is {cpu_usage:.1f}%",
+                    "timestamp": datetime.now().isoformat(),
+                    "category": "system"
+                })
+            
+            if memory.percent > 90:
+                alerts.append({
+                    "id": "memory_critical",
+                    "severity": "critical",
+                    "title": "High Memory Usage",
+                    "message": f"Memory usage is {memory.percent:.1f}%",
+                    "timestamp": datetime.now().isoformat(),
+                    "category": "system"
+                })
+            
+            # Application alerts
+            processes = self.process_monitor.get_all_processes()
+            for process in processes:
+                if process["status"] != "online":
+                    alerts.append({
+                        "id": f"app_{process['name']}_down",
+                        "severity": "critical",
+                        "title": f"Application Down",
+                        "message": f"{process['name']} is {process['status']}",
+                        "timestamp": datetime.now().isoformat(),
+                        "category": "application",
+                        "app_name": process['name']
+                    })
+            
+            # Infrastructure alerts
+            if not self.hosting_manager._check_service_status("nginx"):
+                alerts.append({
+                    "id": "nginx_down",
+                    "severity": "critical",
+                    "title": "Nginx Service Down",
+                    "message": "Nginx web server is not running",
+                    "timestamp": datetime.now().isoformat(),
+                    "category": "infrastructure"
+                })
+                
+        except Exception as e:
+            alerts.append({
+                "id": "monitoring_error",
+                "severity": "warning",
+                "title": "Monitoring System Error",
+                "message": f"Error generating alerts: {str(e)}",
+                "timestamp": datetime.now().isoformat(),
+                "category": "system"
+            })
+        
+        return alerts
+
+    def _check_pm2_daemon(self):
+        """Check if PM2 daemon is responding"""
+        try:
+            result = subprocess.run(["pm2", "ping"], capture_output=True, timeout=5)
+            return result.returncode == 0
+        except:
+            return False
+
+    def _parse_memory(self, memory_str):
+        """Parse memory string to MB"""
+        try:
+            if "MB" in str(memory_str):
+                return int(str(memory_str).replace("MB", ""))
+            elif "GB" in str(memory_str):
+                return int(float(str(memory_str).replace("GB", "")) * 1024)
+        except:
+            pass
+        return 0
+
+    def _parse_cpu(self, cpu_str):
+        """Parse CPU string to percentage"""
+        try:
+            if "%" in str(cpu_str):
+                return float(str(cpu_str).replace("%", ""))
+        except:
+            pass
+        return 0.0
+
+    def _get_network_stats(self):
+        """Get network statistics"""
+        try:
+            import psutil
+            net_io = psutil.net_io_counters()
+            return {
+                "bytes_sent": net_io.bytes_sent,
+                "bytes_recv": net_io.bytes_recv,
+                "packets_sent": net_io.packets_sent,
+                "packets_recv": net_io.packets_recv
+            }
+        except:
+            return {}
+
+    def _get_active_connections(self):
+        """Get active network connections count"""
+        try:
+            import psutil
+            connections = psutil.net_connections()
+            return len([c for c in connections if c.status == 'ESTABLISHED'])
+        except:
+            return 0
+
+    def _get_average_response_times(self):
+        """Get average response times from health checks"""
+        try:
+            health_data = self.health_checker.get_all_health_data()
+            response_times = [h.get("response_time", 0) for h in health_data if h.get("response_time")]
+            return sum(response_times) / len(response_times) if response_times else 0
+        except:
+            return 0
+
+    def _get_error_rates(self):
+        """Calculate error rates from health checks"""
+        try:
+            health_data = self.health_checker.get_all_health_data()
+            if not health_data:
+                return 0
+            
+            unhealthy_count = len([h for h in health_data if h["status"] != "healthy"])
+            return (unhealthy_count / len(health_data)) * 100
+        except:
+            return 0
+
+    def _get_cpu_usage(self):
+        """Get current CPU usage"""
+        try:
+            import psutil
+            return psutil.cpu_percent(interval=1)
+        except:
+            return 0
+
+    def _get_memory_usage(self):
+        """Get current memory usage percentage"""
+        try:
+            import psutil
+            return psutil.virtual_memory().percent
+        except:
+            return 0
+
+    # Site monitoring helper methods
+    def _get_site_health_details(self, site_name):
+        """Get detailed health information for a site"""
+        return self.health_checker.get_domain_health(site_name)
+
+    def _get_site_performance(self, site_name):
+        """Get performance metrics for a site"""
+        return {"response_time": 0, "throughput": 0, "error_rate": 0}
+
+    def _get_site_process_info(self, site_name):
+        """Get process information for a site"""
+        return self.process_monitor.get_process_details(site_name)
+
+    def _get_site_recent_logs(self, site_name):
+        """Get recent logs for a site"""
+        return self.process_monitor.get_process_logs(site_name, 50)
+
+    def _get_site_deployment_info(self, site_name):
+        """Get deployment information for a site"""
+        return {"last_deployment": None, "version": None, "build_status": "unknown"}
+MONITORING_METHODS_EOF
+
+echo "[SUCCESS] ✅ Monitoring helper methods integrated into API server"
 
 echo "[REMOTE] === CREATING SYSTEMD SERVICE (CORRECT PATH) ==="
 echo "[REMOTE] Verified main script: /opt/hosting-manager/hosting_manager.py"
@@ -278,587 +640,59 @@ for i in {1..12}; do
     fi
 done
 
+echo "[REMOTE] === TESTING ALL ENDPOINTS ==="
+echo "[REMOTE] Testing core endpoints..."
+
+CORE_ENDPOINTS=(
+    "/api/health"
+    "/api/status"
+    "/api/processes"
+    "/api/pm2/status"
+)
+
+for endpoint in "${CORE_ENDPOINTS[@]}"; do
+    echo -n "Testing $endpoint ... "
+    if curl -s "http://localhost:5000$endpoint" | grep -q '"success": true'; then
+        echo "✅"
+    else
+        echo "❌"
+    fi
+done
+
+echo "[REMOTE] Testing monitoring endpoints..."
+
+MONITORING_ENDPOINTS=(
+    "/api/monitoring/dashboard"
+    "/api/monitoring/sites"
+    "/api/monitoring/system/resources"
+    "/api/monitoring/alerts"
+)
+
+for endpoint in "${MONITORING_ENDPOINTS[@]}"; do
+    echo -n "Testing $endpoint ... "
+    response=$(curl -s "http://localhost:5000$endpoint")
+    if echo "$response" | grep -q '"success": true'; then
+        echo "✅"
+    else
+        echo "❌"
+        echo "Error: $(echo "$response" | jq -r '.error // "Unknown error"' 2>/dev/null || echo "$response")"
+    fi
+done
+
 # Cleanup
 rm -f /tmp/hosting-manager.tar.gz
 
-echo "Core deployment completed!"
+echo "[SUCCESS] ✅ Complete deployment finished!"
+
 REMOTE_SCRIPT
 
 # Cleanup local package
 rm hosting-manager.tar.gz
 
-print_status "Adding Next.js Monitoring Extension..."
-
-# Create the NextJS monitoring extension file locally
-cat > nextjs_monitoring.py << 'NEXTJS_MONITORING_EOF'
-# src/api/nextjs_monitoring.py
-"""
-Next.js Multisite Monitoring API Extension
-Provides comprehensive monitoring endpoints for React frontend
-"""
-
-from flask import request, jsonify
-import subprocess
-import json
-import os
-import time
-import psutil
-from datetime import datetime
-
-
-class NextJSMonitoringAPI:
-    """Extended monitoring API specifically for Next.js multisite hosting"""
-
-    def __init__(self, app, hosting_manager, process_monitor, health_checker, config, logger):
-        self.app = app
-        self.hosting_manager = hosting_manager
-        self.process_monitor = process_monitor
-        self.health_checker = health_checker
-        self.config = config
-        self.logger = logger
-        
-        self.setup_nextjs_routes()
-
-    def setup_nextjs_routes(self):
-        """Setup Next.js specific monitoring routes"""
-
-        @self.app.route("/api/monitoring/dashboard", methods=["GET"])
-        def get_dashboard_overview():
-            """Get complete dashboard overview for React frontend"""
-            try:
-                dashboard_data = {
-                    "timestamp": datetime.now().isoformat(),
-                    "system": self._get_system_health(),
-                    "applications": self._get_all_app_health(),
-                    "infrastructure": self._get_infrastructure_status(),
-                    "alerts": self._get_active_alerts(),
-                    "performance": self._get_performance_metrics(),
-                    "summary": self._get_dashboard_summary()
-                }
-                
-                return jsonify({
-                    "success": True,
-                    "dashboard": dashboard_data,
-                    "last_updated": datetime.now().isoformat()
-                })
-
-            except Exception as e:
-                self.logger.error(f"Dashboard overview failed: {e}")
-                return jsonify({"success": False, "error": str(e)}), 500
-
-        @self.app.route("/api/monitoring/sites", methods=["GET"])
-        def get_all_sites_status():
-            """Get comprehensive status for all Next.js sites"""
-            try:
-                sites_data = []
-                
-                # Get all domains and their associated processes
-                domains = self.hosting_manager.list_domains()
-                processes = self.process_monitor.get_all_processes()
-                
-                for domain in domains:
-                    site_data = self._get_site_detailed_status(domain, processes)
-                    sites_data.append(site_data)
-                
-                # Sort by status (unhealthy first, then by name)
-                sites_data.sort(key=lambda x: (x["overall_status"] != "healthy", x["domain_name"]))
-                
-                return jsonify({
-                    "success": True,
-                    "sites": sites_data,
-                    "total_sites": len(sites_data),
-                    "healthy_sites": len([s for s in sites_data if s["overall_status"] == "healthy"]),
-                    "timestamp": datetime.now().isoformat()
-                })
-
-            except Exception as e:
-                self.logger.error(f"Sites status failed: {e}")
-                return jsonify({"success": False, "error": str(e)}), 500
-
-        @self.app.route("/api/monitoring/sites/<site_name>", methods=["GET"])
-        def get_site_detailed_monitoring(site_name):
-            """Get detailed monitoring data for a specific site"""
-            try:
-                site_data = {
-                    "site_name": site_name,
-                    "timestamp": datetime.now().isoformat(),
-                    "health": self._get_site_health_details(site_name),
-                    "performance": self._get_site_performance(site_name),
-                    "process": self._get_site_process_info(site_name),
-                    "logs": self._get_site_recent_logs(site_name),
-                    "deployment": self._get_site_deployment_info(site_name)
-                }
-                
-                return jsonify({
-                    "success": True,
-                    "site": site_data
-                })
-
-            except Exception as e:
-                self.logger.error(f"Site detailed monitoring failed: {e}")
-                return jsonify({"success": False, "error": str(e)}), 500
-
-        @self.app.route("/api/monitoring/system/resources", methods=["GET"])
-        def get_system_resources():
-            """Get real-time system resource usage"""
-            try:
-                resources = {
-                    "timestamp": datetime.now().isoformat(),
-                    "cpu": {
-                        "usage_percent": psutil.cpu_percent(interval=1),
-                        "count": psutil.cpu_count(),
-                        "load_average": os.getloadavg(),
-                        "per_core": psutil.cpu_percent(interval=1, percpu=True)
-                    },
-                    "memory": {
-                        "total": psutil.virtual_memory().total,
-                        "available": psutil.virtual_memory().available,
-                        "used": psutil.virtual_memory().used,
-                        "percentage": psutil.virtual_memory().percent,
-                        "swap": {
-                            "total": psutil.swap_memory().total,
-                            "used": psutil.swap_memory().used,
-                            "percentage": psutil.swap_memory().percent
-                        }
-                    },
-                    "disk": {
-                        "total": psutil.disk_usage('/').total,
-                        "used": psutil.disk_usage('/').used,
-                        "free": psutil.disk_usage('/').free,
-                        "percentage": psutil.disk_usage('/').percent
-                    },
-                    "network": self._get_network_stats(),
-                    "processes": {
-                        "total": len(psutil.pids()),
-                        "running": len([p for p in psutil.process_iter() if p.status() == 'running']),
-                        "sleeping": len([p for p in psutil.process_iter() if p.status() == 'sleeping'])
-                    }
-                }
-                
-                return jsonify({
-                    "success": True,
-                    "resources": resources
-                })
-
-            except Exception as e:
-                self.logger.error(f"System resources failed: {e}")
-                return jsonify({"success": False, "error": str(e)}), 500
-
-        @self.app.route("/api/monitoring/alerts", methods=["GET"])
-        def get_active_alerts():
-            """Get all active system alerts and warnings"""
-            try:
-                alerts = self._generate_alerts()
-                
-                return jsonify({
-                    "success": True,
-                    "alerts": alerts,
-                    "alert_count": len(alerts),
-                    "critical_count": len([a for a in alerts if a["severity"] == "critical"]),
-                    "warning_count": len([a for a in alerts if a["severity"] == "warning"]),
-                    "timestamp": datetime.now().isoformat()
-                })
-
-            except Exception as e:
-                self.logger.error(f"Alerts retrieval failed: {e}")
-                return jsonify({"success": False, "error": str(e)}), 500
-
-        @self.app.route("/api/monitoring/logs/stream/<site_name>", methods=["GET"])
-        def stream_site_logs(site_name):
-            """Stream real-time logs for a site"""
-            try:
-                lines = int(request.args.get('lines', 100))
-                logs = self.process_monitor.get_process_logs(site_name, lines)
-                
-                return jsonify({
-                    "success": True,
-                    "logs": logs,
-                    "site_name": site_name,
-                    "timestamp": datetime.now().isoformat()
-                })
-
-            except Exception as e:
-                self.logger.error(f"Log streaming failed: {e}")
-                return jsonify({"success": False, "error": str(e)}), 500
-
-    # Helper methods for monitoring data
-    def _get_system_health(self):
-        """Get overall system health indicators"""
-        try:
-            cpu_usage = psutil.cpu_percent(interval=1)
-            memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
-            
-            return {
-                "status": "healthy" if cpu_usage < 80 and memory.percent < 80 and disk.percent < 90 else "warning",
-                "cpu_usage": cpu_usage,
-                "memory_usage": memory.percent,
-                "disk_usage": disk.percent,
-                "load_average": os.getloadavg()[0],
-                "uptime": time.time() - psutil.boot_time(),
-                "timestamp": datetime.now().isoformat()
-            }
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
-
-    def _get_all_app_health(self):
-        """Get health status for all Next.js applications"""
-        try:
-            apps = []
-            processes = self.process_monitor.get_all_processes()
-            domains = self.hosting_manager.list_domains()
-            
-            for domain in domains:
-                if domain.get("site_type") in ["node", "app"]:
-                    domain_name = domain["domain_name"]
-                    
-                    # Find associated process
-                    app_process = next((p for p in processes if p["name"] == domain_name), None)
-                    
-                    # Get health check data
-                    health_data = self.health_checker.get_domain_health(domain_name)
-                    
-                    app_info = {
-                        "name": domain_name,
-                        "port": domain["port"],
-                        "status": app_process["status"] if app_process else "unknown",
-                        "health": health_data.get("status", "unknown"),
-                        "memory": app_process.get("memory", "N/A") if app_process else "N/A",
-                        "cpu": app_process.get("cpu", "N/A") if app_process else "N/A",
-                        "restart_count": app_process.get("restart_count", 0) if app_process else 0,
-                        "response_time": health_data.get("response_time"),
-                        "last_health_check": health_data.get("last_check")
-                    }
-                    apps.append(app_info)
-            
-            return apps
-        except Exception as e:
-            self.logger.error(f"App health check failed: {e}")
-            return []
-
-    def _get_infrastructure_status(self):
-        """Get infrastructure component status"""
-        return {
-            "nginx": {
-                "status": "running" if self.hosting_manager._check_service_status("nginx") else "stopped",
-                "config_valid": self.hosting_manager._test_nginx_config()
-            },
-            "pm2": {
-                "available": self.process_monitor.pm2_available,
-                "daemon_running": self._check_pm2_daemon(),
-                "process_count": len(self.process_monitor.get_pm2_processes()) if self.process_monitor.pm2_available else 0
-            },
-            "database": {
-                "connected": self.hosting_manager.get_database_connection() is not None
-            },
-            "monitoring": {
-                "process_monitor": self.process_monitor.is_monitoring_active(),
-                "health_checker": self.health_checker.is_active()
-            }
-        }
-
-    def _get_performance_metrics(self):
-        """Get key performance metrics"""
-        try:
-            processes = self.process_monitor.get_all_processes()
-            
-            return {
-                "total_memory_usage": sum(self._parse_memory(p.get("memory", "0MB")) for p in processes),
-                "average_cpu_usage": sum(self._parse_cpu(p.get("cpu", "0%")) for p in processes) / max(len(processes), 1),
-                "active_connections": self._get_active_connections(),
-                "response_times": self._get_average_response_times(),
-                "error_rates": self._get_error_rates()
-            }
-        except Exception as e:
-            return {"error": str(e)}
-
-    def _get_dashboard_summary(self):
-        """Get dashboard summary statistics"""
-        try:
-            domains = self.hosting_manager.list_domains()
-            processes = self.process_monitor.get_all_processes()
-            
-            total_sites = len([d for d in domains if d.get("site_type") in ["node", "app"]])
-            healthy_sites = len([d for d in domains if self.health_checker.get_domain_health(d["domain_name"]).get("status") == "healthy"])
-            
-            return {
-                "total_sites": total_sites,
-                "healthy_sites": healthy_sites,
-                "unhealthy_sites": total_sites - healthy_sites,
-                "total_processes": len(processes),
-                "running_processes": len([p for p in processes if p["status"] == "online"]),
-                "system_health": "healthy" if psutil.cpu_percent() < 80 and psutil.virtual_memory().percent < 80 else "warning"
-            }
-        except Exception as e:
-            return {"error": str(e)}
-
-    def _get_site_detailed_status(self, domain, processes):
-        """Get detailed status for a single site"""
-        domain_name = domain["domain_name"]
-        
-        # Find associated process
-        site_process = next((p for p in processes if p["name"] == domain_name), None)
-        
-        # Get health data
-        health_data = self.health_checker.get_domain_health(domain_name)
-        
-        # Determine overall status
-        process_status = site_process["status"] if site_process else "unknown"
-        health_status = health_data.get("status", "unknown")
-        
-        if process_status == "online" and health_status == "healthy":
-            overall_status = "healthy"
-        elif process_status == "online" and health_status != "healthy":
-            overall_status = "degraded"
-        else:
-            overall_status = "unhealthy"
-        
-        return {
-            "domain_name": domain_name,
-            "port": domain["port"],
-            "site_type": domain["site_type"],
-            "overall_status": overall_status,
-            "process": {
-                "status": process_status,
-                "pid": site_process.get("pid") if site_process else None,
-                "memory": site_process.get("memory", "N/A") if site_process else "N/A",
-                "cpu": site_process.get("cpu", "N/A") if site_process else "N/A",
-                "restart_count": site_process.get("restart_count", 0) if site_process else 0,
-                "process_manager": site_process.get("process_manager", "unknown") if site_process else "unknown"
-            },
-            "health": {
-                "status": health_status,
-                "response_time": health_data.get("response_time"),
-                "last_check": health_data.get("last_check"),
-                "consecutive_failures": health_data.get("consecutive_failures", 0),
-                "uptime_percentage": health_data.get("uptime_percentage", 0)
-            },
-            "ssl_enabled": domain.get("ssl_enabled", False),
-            "created_at": domain.get("created_at"),
-            "url": f"http://{domain_name}"
-        }
-
-    def _generate_alerts(self):
-        """Generate system alerts based on current status"""
-        alerts = []
-        
-        try:
-            # System resource alerts
-            cpu_usage = psutil.cpu_percent(interval=1)
-            memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
-            
-            if cpu_usage > 90:
-                alerts.append({
-                    "id": "cpu_critical",
-                    "severity": "critical",
-                    "title": "High CPU Usage",
-                    "message": f"CPU usage is {cpu_usage:.1f}%",
-                    "timestamp": datetime.now().isoformat(),
-                    "category": "system"
-                })
-            elif cpu_usage > 80:
-                alerts.append({
-                    "id": "cpu_warning",
-                    "severity": "warning", 
-                    "title": "Elevated CPU Usage",
-                    "message": f"CPU usage is {cpu_usage:.1f}%",
-                    "timestamp": datetime.now().isoformat(),
-                    "category": "system"
-                })
-            
-            if memory.percent > 90:
-                alerts.append({
-                    "id": "memory_critical",
-                    "severity": "critical",
-                    "title": "High Memory Usage",
-                    "message": f"Memory usage is {memory.percent:.1f}%",
-                    "timestamp": datetime.now().isoformat(),
-                    "category": "system"
-                })
-            
-            # Application alerts
-            processes = self.process_monitor.get_all_processes()
-            for process in processes:
-                if process["status"] != "online":
-                    alerts.append({
-                        "id": f"app_{process['name']}_down",
-                        "severity": "critical",
-                        "title": f"Application Down",
-                        "message": f"{process['name']} is {process['status']}",
-                        "timestamp": datetime.now().isoformat(),
-                        "category": "application",
-                        "app_name": process['name']
-                    })
-            
-            # Infrastructure alerts
-            if not self.hosting_manager._check_service_status("nginx"):
-                alerts.append({
-                    "id": "nginx_down",
-                    "severity": "critical",
-                    "title": "Nginx Service Down",
-                    "message": "Nginx web server is not running",
-                    "timestamp": datetime.now().isoformat(),
-                    "category": "infrastructure"
-                })
-                
-        except Exception as e:
-            alerts.append({
-                "id": "monitoring_error",
-                "severity": "warning",
-                "title": "Monitoring System Error",
-                "message": f"Error generating alerts: {str(e)}",
-                "timestamp": datetime.now().isoformat(),
-                "category": "system"
-            })
-        
-        return alerts
-
-    # Additional helper methods
-    def _check_pm2_daemon(self):
-        """Check if PM2 daemon is responding"""
-        try:
-            result = subprocess.run(["pm2", "ping"], capture_output=True, timeout=5)
-            return result.returncode == 0
-        except:
-            return False
-
-    def _parse_memory(self, memory_str):
-        """Parse memory string to MB"""
-        try:
-            if "MB" in str(memory_str):
-                return int(str(memory_str).replace("MB", ""))
-            elif "GB" in str(memory_str):
-                return int(float(str(memory_str).replace("GB", "")) * 1024)
-        except:
-            pass
-        return 0
-
-    def _parse_cpu(self, cpu_str):
-        """Parse CPU string to percentage"""
-        try:
-            if "%" in str(cpu_str):
-                return float(str(cpu_str).replace("%", ""))
-        except:
-            pass
-        return 0.0
-
-    def _get_network_stats(self):
-        """Get network statistics"""
-        try:
-            net_io = psutil.net_io_counters()
-            return {
-                "bytes_sent": net_io.bytes_sent,
-                "bytes_recv": net_io.bytes_recv,
-                "packets_sent": net_io.packets_sent,
-                "packets_recv": net_io.packets_recv
-            }
-        except:
-            return {}
-
-    def _get_active_connections(self):
-        """Get active network connections count"""
-        try:
-            connections = psutil.net_connections()
-            return len([c for c in connections if c.status == 'ESTABLISHED'])
-        except:
-            return 0
-
-    def _get_average_response_times(self):
-        """Get average response times from health checks"""
-        try:
-            health_data = self.health_checker.get_all_health_data()
-            response_times = [h.get("response_time", 0) for h in health_data if h.get("response_time")]
-            return sum(response_times) / len(response_times) if response_times else 0
-        except:
-            return 0
-
-    def _get_error_rates(self):
-        """Calculate error rates from health checks"""
-        try:
-            health_data = self.health_checker.get_all_health_data()
-            if not health_data:
-                return 0
-            
-            unhealthy_count = len([h for h in health_data if h["status"] != "healthy"])
-            return (unhealthy_count / len(health_data)) * 100
-        except:
-            return 0
-
-    # Placeholder methods for detailed site monitoring
-    def _get_site_health_details(self, site_name):
-        """Get detailed health information for a site"""
-        return self.health_checker.get_domain_health(site_name)
-
-    def _get_site_performance(self, site_name):
-        """Get performance metrics for a site"""
-        return {"response_time": 0, "throughput": 0, "error_rate": 0}
-
-    def _get_site_process_info(self, site_name):
-        """Get process information for a site"""
-        return self.process_monitor.get_process_details(site_name)
-
-    def _get_site_recent_logs(self, site_name):
-        """Get recent logs for a site"""
-        return self.process_monitor.get_process_logs(site_name, 50)
-
-    def _get_site_deployment_info(self, site_name):
-        """Get deployment information for a site"""
-        return {"last_deployment": None, "version": None, "build_status": "unknown"}
-NEXTJS_MONITORING_EOF
-
-# Upload the monitoring extension
-scp nextjs_monitoring.py "${REMOTE_USER}@${REMOTE_HOST}:/tmp/"
-
-# Integrate monitoring extension on remote server
-ssh "${REMOTE_USER}@${REMOTE_HOST}" << 'REMOTE_NEXTJS_SCRIPT'
-echo "🚀 Integrating Next.js Monitoring Extension..."
-
-cd /opt/hosting-manager
-
-# Move the monitoring extension to the correct location
-mv /tmp/nextjs_monitoring.py src/api/nextjs_monitoring.py
-
-# Update the main API server to integrate the monitoring extension
-cat >> src/api/server.py << 'EOF'
-
-    def setup_nextjs_monitoring(self):
-        """Setup NextJS monitoring extension"""
-        try:
-            from .nextjs_monitoring import NextJSMonitoringAPI
-            
-            self.nextjs_monitoring = NextJSMonitoringAPI(
-                self.app,
-                self.hosting_manager,
-                self.process_monitor,
-                self.health_checker,
-                self.config,
-                self.logger
-            )
-            self.logger.info("NextJS monitoring extension loaded")
-        except ImportError as e:
-            self.logger.warning(f"NextJS monitoring extension not available: {e}")
-        except Exception as e:
-            self.logger.error(f"Failed to load NextJS monitoring: {e}")
-EOF
-
-# Update the API server run method to initialize NextJS monitoring
-sed -i '/def run(self, host="0.0.0.0", port=5000, debug=False):/a\
-        # Setup NextJS monitoring extension\
-        self.setup_nextjs_monitoring()' src/api/server.py
-
-echo "✅ NextJS monitoring extension integrated"
-REMOTE_NEXTJS_SCRIPT
-
-# Cleanup monitoring file
-rm -f nextjs_monitoring.py
-
-print_success "Next.js Monitoring Extension added to deployment"
-
 # Wait a moment for service to stabilize
 sleep 5
 
-# Comprehensive health check
+# Comprehensive health check from external access
 print_status "Running comprehensive health check..."
 
 # Check service status
@@ -868,7 +702,7 @@ SERVICE_STATUS=$(ssh "${REMOTE_USER}@${REMOTE_HOST}" "systemctl is-active hostin
 if [ "$SERVICE_STATUS" = "active" ]; then
     print_success "✅ Service is active!"
     
-    # Test API endpoint
+    # Test API endpoints
     print_status "Testing API endpoints..."
     if ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s http://localhost:5000/api/health" | grep -q "healthy"; then
         print_success "✅ Health endpoint working!"
@@ -931,7 +765,7 @@ echo ""
 print_status "📋 Available Features:"
 echo "✅ Core Hosting Management"
 echo "✅ PM2 Process Management with Status API"
-echo "✅ Next.js Multisite Monitoring"
+echo "✅ Next.js Multisite Monitoring (INTEGRATED)"
 echo "✅ Real-time System Metrics"
 echo "✅ Health Monitoring & Alerts"
 echo "✅ React Frontend APIs"
@@ -948,7 +782,7 @@ echo "  PM2 Management:"
 echo "    PM2 Status:  http://$REMOTE_HOST:5000/api/pm2/status"
 echo "    PM2 List:    http://$REMOTE_HOST:5000/api/pm2/list"
 echo ""
-echo "  Next.js Monitoring:"
+echo "  Next.js Monitoring (INTEGRATED):"
 echo "    Dashboard:   http://$REMOTE_HOST:5000/api/monitoring/dashboard"
 echo "    Sites:       http://$REMOTE_HOST:5000/api/monitoring/sites"
 echo "    Resources:   http://$REMOTE_HOST:5000/api/monitoring/system/resources"
@@ -971,6 +805,15 @@ DEPLOY_EXAMPLE
 
 echo ""
 print_status "📱 React Frontend Integration:"
-echo "  Use the MonitoringDashboard component provided"
 echo "  Set API_BASE = 'http://$REMOTE_HOST:5000'"
+echo "  Use the MonitoringDashboard component provided"
 echo "  Real-time monitoring with configurable polling intervals"
+echo ""
+
+print_status "🧪 Test Monitoring Endpoints:"
+echo "  curl http://$REMOTE_HOST:5000/api/monitoring/dashboard | jq"
+echo "  curl http://$REMOTE_HOST:5000/api/monitoring/sites | jq"
+echo "  curl http://$REMOTE_HOST:5000/api/monitoring/system/resources | jq"
+echo "  curl http://$REMOTE_HOST:5000/api/monitoring/alerts | jq"
+
+print_success "🚀 Your complete Next.js multisite hosting platform is ready!"
