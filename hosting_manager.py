@@ -9,13 +9,35 @@ import sys
 import argparse
 import json
 from datetime import datetime
-import shutil
 
-# Add src directory to path for imports
+# Add src directory to path for imports FIRST - before any local imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
+# Now import local modules
+try:
+    # Try new modular structure first
+    from src.api.app import HostingAPI
+
+    print("Using modular API structure")
+except ImportError:
+    try:
+        # Fall back to old structure
+
+        print("Using legacy API structure")
+    except ImportError as e:
+        print(f"FATAL ERROR: Cannot import HostingAPI")
+        print(f"Import error: {e}")
+        print("Checking available files...")
+        api_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "src", "api")
+        if os.path.exists(api_dir):
+            print(f"Files in {api_dir}:")
+            for f in sorted(os.listdir(api_dir)):
+                print(f"  - {f}")
+        else:
+            print(f"Directory not found: {api_dir}")
+        sys.exit(1)
+
 from core.hosting_manager import HostingManager
-from api.server import HostingAPI
 from monitoring.process_monitor import ProcessMonitor
 from monitoring.health_checker import HealthChecker
 from utils.config import Config
@@ -73,6 +95,9 @@ class HostingApplication:
 
         except Exception as e:
             self.logger.error(f"API server failed: {e}")
+            import traceback
+
+            self.logger.error(f"Traceback: {traceback.format_exc()}")
             sys.exit(1)
 
     def start_monitoring(self):
@@ -81,10 +106,12 @@ class HostingApplication:
             self.logger.info("Starting monitoring services...")
 
             # Start process monitor
-            self.process_monitor.start()
+            if hasattr(self.process_monitor, "start"):
+                self.process_monitor.start()
 
             # Start health checker
-            self.health_checker.start()
+            if hasattr(self.health_checker, "start"):
+                self.health_checker.start()
 
             self.logger.info("Monitoring services started")
 
@@ -136,7 +163,14 @@ def main():
 
     args = parser.parse_args()
 
-    app = HostingApplication()
+    try:
+        app = HostingApplication()
+    except Exception as e:
+        print(f"FATAL: Failed to initialize application: {e}")
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)
 
     try:
         if args.setup:
@@ -176,14 +210,15 @@ def main():
             print("  --status               Show system status")
             print("\nDevelopment:")
             print("  Use deployment-setup.sh for better workflow")
-            print("  ./deployment-setup.sh full-setup")
-            print("  ./deployment-setup.sh watch")
 
     except KeyboardInterrupt:
         print("\nShutdown requested")
         sys.exit(0)
     except Exception as e:
         print(f"Error: {e}")
+        import traceback
+
+        traceback.print_exc()
         sys.exit(1)
 
 
