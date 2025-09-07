@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 
 
-class PortService:
+class NextPortService:
     """Service for port management and Next.js process detection"""
 
     def __init__(self, deps):

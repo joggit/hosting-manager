@@ -3,7 +3,7 @@ from flask import request
 from ..utils import APIResponse, handle_api_errors, PortChecker
 
 
-def register_utility_routes(app, deps):
+def register_routes(app, deps):
     """Register utility routes"""
 
     @app.route("/api/check-ports", methods=["POST"])

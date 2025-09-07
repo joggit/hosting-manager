@@ -99,79 +99,321 @@ class ProcessMonitor:
             self.logger.warning(f"PM2 setup failed: {e}")
 
     def deploy_nodejs_app(self, site_name, project_files, deploy_config):
-        """Deploy Node.js application with PM2 support"""
+        """Deploy Node.js application with enhanced Next.js support"""
         try:
-            self.logger.info(f"Deploying Node.js app: {site_name}")
+            port = deploy_config.get("port", 3000)
+            target_dir = f"/tmp/www/domains/{site_name}"
 
-            timestamp = int(time.time())
-            temp_dir = f"/tmp/deploy_{site_name}_{timestamp}"
-            final_dir = f"{self.config.get('web_root')}/{site_name}"
+            # Clean up existing directory
+            if os.path.exists(target_dir):
+                import shutil
 
-            # Create directories
-            os.makedirs(temp_dir, exist_ok=True)
-            os.makedirs(final_dir, exist_ok=True)
+                shutil.rmtree(target_dir)
 
-            # Extract files
-            self._extract_files(project_files, temp_dir)
+            os.makedirs(target_dir, exist_ok=True)
+            self.logger.info(f"Deploying to: {target_dir}")
 
-            # Install dependencies
-            if not self._npm_install(temp_dir):
-                return {"success": False, "error": "npm install failed"}
+            # Extract files with Next.js fixes
+            self._extract_files(project_files, target_dir)
 
-            # Build if needed
-            if self._has_build_script(temp_dir):
-                if not self._npm_build(temp_dir):
-                    return {"success": False, "error": "npm build failed"}
+            # Enhanced install and build process
+            if not self._npm_install_and_build(target_dir):
+                return {
+                    "success": False,
+                    "error": "Failed to install dependencies or build application",
+                    "site_name": site_name,
+                }
 
-            # Copy to final location
-            if temp_dir != final_dir:
-                if os.path.exists(final_dir):
-                    shutil.rmtree(final_dir)
-                shutil.copytree(temp_dir, final_dir)
-
-            # Start the application
-            app_port = deploy_config.get("port", 3000)
+            # Determine process manager
             process_manager = self._determine_process_manager()
 
-            if not self._start_nodejs_app(
-                site_name, final_dir, app_port, process_manager
-            ):
-                return {"success": False, "error": "Failed to start application"}
-
-            # Setup nginx proxy
-            if not self.config.get("readonly_mode"):
-                self._setup_nginx_proxy(site_name, app_port)
-
-            # Save process info to database
-            self._save_process_info(site_name, app_port, final_dir, process_manager)
-
-            # Cleanup temp directory
-            if os.path.exists(temp_dir) and temp_dir != final_dir:
-                shutil.rmtree(temp_dir, ignore_errors=True)
-
-            self.logger.info(f"Deployment successful: {site_name}")
-
-            return {
-                "success": True,
-                "site_name": site_name,
-                "port": app_port,
-                "process_manager": process_manager,
-                "url": f"http://{site_name}",
-                "files_path": final_dir,
-            }
+            # Start the application
+            if self._start_nodejs_app(site_name, target_dir, port, process_manager):
+                return {
+                    "success": True,
+                    "site_name": site_name,
+                    "port": port,
+                    "files_path": target_dir,
+                    "process_manager": process_manager,
+                    "url": f"http://localhost:{port}",
+                    "status": "running",
+                    "created_at": datetime.now().isoformat(),
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "Failed to start application with process manager",
+                    "site_name": site_name,
+                    "process_manager": process_manager,
+                }
 
         except Exception as e:
-            self.logger.error(f"Deployment failed: {e}")
-            return {"success": False, "error": str(e)}
+            self.logger.error(f"Deployment failed for {site_name}: {e}")
+            return {"success": False, "error": str(e), "site_name": site_name}
 
     def _extract_files(self, files_dict, target_dir):
-        """Extract project files"""
+        """Extract project files with Next.js compatibility fixes"""
         for file_path, content in files_dict.items():
             full_path = os.path.join(target_dir, file_path)
             os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
+            # Special handling for package.json
+            if file_path.endswith("package.json"):
+                try:
+                    package_data = json.loads(content)
+
+                    # Remove problematic configurations for Next.js + PM2
+                    if "type" in package_data:
+                        del package_data["type"]
+                        self.logger.info(
+                            "Removed 'type' field from package.json for PM2 compatibility"
+                        )
+
+                    # Ensure proper scripts for PM2
+                    if "scripts" not in package_data:
+                        package_data["scripts"] = {}
+
+                    # Add PM2-specific scripts if missing
+                    scripts = package_data["scripts"]
+                    if "build" not in scripts:
+                        scripts["build"] = "next build"
+                    if "start" not in scripts:
+                        scripts["start"] = "next start"
+                    if "pm2:start" not in scripts:
+                        scripts["pm2:start"] = "next start -p $PORT"
+
+                    # Ensure engines are specified
+                    if "engines" not in package_data:
+                        package_data["engines"] = {"node": ">=18.0.0", "npm": ">=8.0.0"}
+
+                    content = json.dumps(package_data, indent=2)
+
+                except json.JSONDecodeError:
+                    self.logger.warning(f"Could not parse package.json at {file_path}")
+
             with open(full_path, "w", encoding="utf-8") as f:
                 f.write(content)
+
+    def _is_nextjs_app(self, cwd):
+        """Check if this is a Next.js application that needs devDependencies"""
+        try:
+            package_path = os.path.join(cwd, "package.json")
+            if os.path.exists(package_path):
+                with open(package_path) as f:
+                    package_data = json.load(f)
+
+                # Check if Next.js is in dependencies
+                deps = package_data.get("dependencies", {})
+                dev_deps = package_data.get("devDependencies", {})
+
+                # Check for Next.js in dependencies
+                if "next" in deps:
+                    return True
+
+                # Check for Next.js-specific files
+                nextjs_files = ["next.config.js", "next.config.mjs", "next.config.ts"]
+
+                for config_file in nextjs_files:
+                    if os.path.exists(os.path.join(cwd, config_file)):
+                        return True
+
+                # Check for tailwindcss in devDependencies (common in Next.js)
+                if "tailwindcss" in dev_deps and "postcss" in dev_deps:
+                    return True
+
+            return False
+        except Exception as e:
+            self.logger.warning(f"Failed to detect Next.js app: {e}")
+            return False
+
+    def _npm_install_and_build(self, cwd):
+        """Enhanced npm install and build process for Next.js"""
+        try:
+            # Step 1: Clean install
+            self.logger.info("Installing dependencies...")
+            strategies = [
+                ["npm", "ci", "--only=production", "--silent"],
+                ["npm", "install", "--only=production", "--silent"],
+                ["npm", "install", "--silent"],
+                ["npm", "install", "--force", "--silent"],  # Last resort
+            ]
+
+            install_success = False
+            for strategy in strategies:
+                self.logger.info(f"Trying: {' '.join(strategy)}")
+                result = subprocess.run(
+                    strategy, cwd=cwd, capture_output=True, text=True, timeout=300
+                )
+
+                if result.returncode == 0:
+                    self.logger.info("npm install successful")
+                    install_success = True
+                    break
+                else:
+                    self.logger.warning(f"Strategy failed: {result.stderr[:200]}")
+
+            if not install_success:
+                self.logger.error("All npm install strategies failed")
+                return False
+
+            # Step 2: Check if build is needed and possible
+            if not self._has_build_script(cwd):
+                self.logger.info("No build script found, skipping build")
+                return True
+
+            # Step 3: Build the Next.js app
+            self.logger.info("Building Next.js application...")
+
+            # Set NODE_ENV for build
+            env = os.environ.copy()
+            env["NODE_ENV"] = "production"
+            env["NEXT_TELEMETRY_DISABLED"] = "1"  # Disable telemetry for faster builds
+
+            result = subprocess.run(
+                ["npm", "run", "build"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                timeout=900,  # Increased timeout for build
+                env=env,
+            )
+
+            if result.returncode == 0:
+                self.logger.info("Next.js build successful")
+
+                # Verify .next directory exists
+                next_dir = os.path.join(cwd, ".next")
+                if os.path.exists(next_dir):
+                    self.logger.info(f".next directory created successfully")
+                    return True
+                else:
+                    self.logger.error(".next directory not found after build")
+                    return False
+            else:
+                self.logger.error(f"Next.js build failed: {result.stderr}")
+                # Log stdout as well for better debugging
+                if result.stdout:
+                    self.logger.error(f"Build stdout: {result.stdout}")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Build process failed: {e}")
+            return False
+
+    def _start_pm2_app(self, site_name, cwd, port):
+        """Start Next.js app with PM2 - optimized configuration"""
+        try:
+            # Ensure the build is complete before starting
+            next_dir = os.path.join(cwd, ".next")
+            if not os.path.exists(next_dir):
+                self.logger.error("No .next directory found. Build may have failed.")
+                return False
+
+            # Detect the correct start command
+            start_command = self._detect_nextjs_start_script(cwd, port)
+
+            # Create optimized PM2 ecosystem for Next.js
+            ecosystem = {
+                "apps": [
+                    {
+                        "name": site_name,
+                        "script": "npm",
+                        "args": "start",
+                        "cwd": cwd,
+                        "env": {
+                            "NODE_ENV": "production",
+                            "PORT": str(port),
+                            "NEXT_TELEMETRY_DISABLED": "1",
+                        },
+                        "instances": 1,
+                        "exec_mode": "fork",  # Use fork mode for Next.js
+                        "max_memory_restart": "1G",
+                        "min_uptime": "10s",
+                        "max_restarts": 5,
+                        "restart_delay": 4000,
+                        "autorestart": True,
+                        "watch": False,  # Disable watch in production
+                        "ignore_watch": [".next", "node_modules"],
+                        "error_file": f"/tmp/process-logs/{site_name}-error.log",
+                        "out_file": f"/tmp/process-logs/{site_name}-out.log",
+                        "log_file": f"/tmp/process-logs/{site_name}-combined.log",
+                        "time": True,
+                        "merge_logs": True,
+                        "kill_timeout": 5000,
+                        "listen_timeout": 8000,
+                        "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+                    }
+                ]
+            }
+
+            # Ensure log directory exists
+            os.makedirs("/tmp/process-logs", exist_ok=True)
+
+            ecosystem_path = f"{cwd}/ecosystem.config.json"
+            with open(ecosystem_path, "w") as f:
+                json.dump(ecosystem, f, indent=2)
+
+            self.logger.info(f"Created PM2 ecosystem config at {ecosystem_path}")
+
+            # Delete existing PM2 process if it exists
+            subprocess.run(["pm2", "delete", site_name], capture_output=True, text=True)
+
+            # Start with PM2
+            result = subprocess.run(
+                ["pm2", "start", ecosystem_path], capture_output=True, text=True
+            )
+
+            if result.returncode == 0:
+                self.logger.info(f"PM2 app started successfully: {site_name}")
+
+                # Wait a moment then check if it's actually running
+                import time
+
+                time.sleep(3)
+
+                status_result = subprocess.run(
+                    ["pm2", "show", site_name], capture_output=True, text=True
+                )
+
+                if status_result.returncode == 0:
+                    self.logger.info(f"PM2 app {site_name} is running")
+                    return True
+                else:
+                    self.logger.error(f"PM2 app {site_name} failed to start properly")
+                    return False
+            else:
+                self.logger.error(f"PM2 start failed: {result.stderr}")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"PM2 app start failed: {e}")
+            return False
+
+    def _detect_nextjs_start_script(self, cwd, port):
+        """Detect the correct start script for Next.js app"""
+        try:
+            package_path = os.path.join(cwd, "package.json")
+            if os.path.exists(package_path):
+                with open(package_path) as f:
+                    package_data = json.load(f)
+                    scripts = package_data.get("scripts", {})
+
+                    # Check for Next.js in dependencies
+                    deps = package_data.get("dependencies", {})
+                    is_nextjs = "next" in deps
+
+                    if is_nextjs and "start" in scripts:
+                        return f"npm start"
+                    elif is_nextjs and "dev" in scripts:
+                        # Fallback to dev for development
+                        return f"npm run dev"
+
+            # Final fallback
+            return "npm start"
+
+        except Exception as e:
+            self.logger.warning(f"Failed to detect Next.js start script: {e}")
+            return "npm start"
 
     def _npm_install(self, cwd):
         """Run npm install with error handling"""
@@ -255,47 +497,6 @@ class ProcessMonitor:
             self.logger.error(f"Failed to start app {site_name}: {e}")
             return False
 
-    def _start_pm2_app(self, site_name, cwd, port):
-        """Start app with PM2"""
-        try:
-            # Create PM2 ecosystem file
-            ecosystem = {
-                "apps": [
-                    {
-                        "name": site_name,
-                        "script": self._detect_start_script(cwd),
-                        "cwd": cwd,
-                        "env": {"NODE_ENV": "production", "PORT": str(port)},
-                        "instances": 1,
-                        "exec_mode": "fork",
-                        "max_memory_restart": "500M",
-                        "error_file": f"/tmp/process-logs/{site_name}-error.log",
-                        "out_file": f"/tmp/process-logs/{site_name}-out.log",
-                        "log_file": f"/tmp/process-logs/{site_name}-combined.log",
-                    }
-                ]
-            }
-
-            ecosystem_path = f"{cwd}/ecosystem.config.json"
-            with open(ecosystem_path, "w") as f:
-                json.dump(ecosystem, f, indent=2)
-
-            # Start with PM2
-            result = subprocess.run(
-                ["pm2", "start", ecosystem_path], capture_output=True, text=True
-            )
-
-            if result.returncode == 0:
-                self.logger.info(f"PM2 app started: {site_name}")
-                return True
-            else:
-                self.logger.error(f"PM2 start failed: {result.stderr}")
-                return False
-
-        except Exception as e:
-            self.logger.error(f"PM2 app start failed: {e}")
-            return False
-
     def _detect_start_script(self, cwd):
         """Detect the correct start script for the app"""
         try:
@@ -305,12 +506,11 @@ class ProcessMonitor:
                     package_data = json.load(f)
                     scripts = package_data.get("scripts", {})
 
-                    # Check for Next.js
-                    if "next" in package_data.get("dependencies", {}):
-                        if os.path.exists(os.path.join(cwd, ".next")):
-                            return "node_modules/.bin/next start"
-                        else:
-                            return "npm run build && node_modules/.bin/next start"
+                    # For Next.js or any app with "type": "module", use npm start
+                    if package_data.get(
+                        "type"
+                    ) == "module" or "next" in package_data.get("dependencies", {}):
+                        return "npm start"
 
                     # Check for start script
                     if "start" in scripts:
@@ -324,7 +524,6 @@ class ProcessMonitor:
                     return f"node {script}"
 
             return "npm start"  # Final fallback
-
         except Exception as e:
             self.logger.warning(f"Failed to detect start script: {e}")
             return "npm start"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# deploy-no-api.sh - Deployment script for refactored hosting manager (without API server)
+# deploy-with-modular-api.sh - Deployment script that preserves the modular API structure
 
 set -e
 
@@ -20,7 +20,7 @@ print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 
-print_status "=== Hosting Manager v3.0 - Refactored Deployment (No API Server) ==="
+print_status "=== Hosting Manager v3.0 - Modular API Deployment ==="
 
 # Check if we're in the right directory
 if [ ! -d "src" ]; then
@@ -35,6 +35,9 @@ required_files=(
     "src/monitoring/health_checker.py"
     "src/utils/config.py"
     "src/utils/logger.py"
+    "src/api/app.py"
+    "src/api/routes/__init__.py"
+    "hosting_manager.py"
 )
 
 print_status "Checking required files..."
@@ -44,337 +47,94 @@ for file in "${required_files[@]}"; do
         exit 1
     fi
 done
-print_success "All required core files present"
+print_success "All required files present"
+
+# Check for modular API routes
+route_count=$(find src/api/routes -name "*.py" -not -name "__init__.py" | wc -l)
+service_count=$(find src/api/services -name "*.py" -not -name "__init__.py" 2>/dev/null | wc -l || echo 0)
+
+print_status "Found $route_count route modules and $service_count service modules"
 
 # Create deployment directory
 print_status "Preparing deployment files..."
 rm -rf deploy-temp
-mkdir -p deploy-temp/src/{api,core,monitoring,utils}
+mkdir -p deploy-temp
 
-# Copy source files
-cp -r src/* deploy-temp/src/
+# Copy ALL source files as-is (preserve your modular structure)
+cp -r src/ deploy-temp/
+cp hosting_manager.py deploy-temp/
 
-# Create the fixed hosting_manager.py (without API server dependency)
-cat > deploy-temp/hosting_manager.py << 'EOF'
-#!/usr/bin/env python3
-"""
-Modular Hosting Manager v3.0
-Main application entry point with improved monitoring and PM2 support
-"""
-
-import os
-import sys
-import argparse
-import json
-from datetime import datetime
-
-# Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
-
-# Import all required modules (no API server needed)
-from core.hosting_manager import HostingManager
-from monitoring.process_monitor import ProcessMonitor
-from monitoring.health_checker import HealthChecker
-from utils.config import Config
-from utils.logger import Logger
-
-
-class HostingApplication:
-    """Main hosting application orchestrator"""
-
-    def __init__(self):
-        self.config = Config()
-        self.logger = Logger()
-        self.hosting_manager = HostingManager(self.config, self.logger)
-        self.process_monitor = ProcessMonitor(self.config, self.logger)
-        self.health_checker = HealthChecker(self.config, self.logger)
-
-    def setup_system(self):
-        """Complete system setup"""
-        self.logger.info("Starting hosting manager system setup...")
-
-        try:
-            # Initialize core system
-            if not self.hosting_manager.setup_system():
-                self.logger.error("Core system setup failed")
-                return False
-
-            # Setup monitoring
-            if not self.process_monitor.setup():
-                self.logger.warning("Process monitor setup had issues")
-
-            # Setup health checking
-            if not self.health_checker.setup():
-                self.logger.warning("Health checker setup had issues")
-
-            self.logger.info("System setup completed successfully")
-            return True
-
-        except Exception as e:
-            self.logger.error(f"System setup failed: {e}")
-            return False
-
-    def start_api_server(self, host="0.0.0.0", port=5000):
-        """Start a minimal API server (since main API was refactored out)"""
-        try:
-            self.logger.info("Starting minimal API server (main API was refactored)")
-            
-            # Create a simple Flask app for basic functionality
-            from flask import Flask, jsonify
-            from flask_cors import CORS
-            
-            app = Flask(__name__)
-            CORS(app)
-            
-            @app.route("/api/health", methods=["GET"])
-            def health_check():
-                return jsonify({
-                    "status": "healthy",
-                    "timestamp": datetime.now().isoformat(),
-                    "version": "3.0.0",
-                    "service": "Hosting Manager Core (API refactored)",
-                    "readonly_filesystem": self.hosting_manager.readonly_filesystem,
-                    "pm2_available": getattr(self.process_monitor, 'pm2_available', False)
-                })
-            
-            @app.route("/api/status", methods=["GET"])
-            def get_system_status():
-                try:
-                    status = self.hosting_manager.get_system_status()
-                    return jsonify({"success": True, "status": status})
-                except Exception as e:
-                    return jsonify({"success": False, "error": str(e)}), 500
-            
-            @app.route("/api/processes", methods=["GET"])
-            def get_processes():
-                try:
-                    processes = self.process_monitor.get_all_processes()
-                    summary = self.process_monitor.get_process_summary()
-                    
-                    return jsonify({
-                        "success": True,
-                        "timestamp": datetime.now().isoformat(),
-                        "summary": summary,
-                        "processes": processes
-                    })
-                except Exception as e:
-                    self.logger.error(f"Failed to get processes: {e}")
-                    return jsonify({"success": False, "error": str(e)}), 500
-
-            @app.errorhandler(404)
-            def not_found(error):
-                return jsonify({"success": False, "error": "Endpoint not found"}), 404
-
-            self.logger.info(f"Starting minimal API server on {host}:{port}")
-            
-            # Start background monitoring
-            self.start_monitoring()
-            
-            app.run(host=host, port=port, debug=False, use_reloader=False, threaded=True)
-
-        except Exception as e:
-            self.logger.error(f"API server failed: {e}")
-            import traceback
-            self.logger.error(f"Traceback: {traceback.format_exc()}")
-            sys.exit(1)
-
-    def start_monitoring(self):
-        """Start monitoring services"""
-        try:
-            self.logger.info("Starting monitoring services...")
-
-            # Start background monitoring if available
-            if hasattr(self.process_monitor, "start_background_monitoring"):
-                self.process_monitor.start_background_monitoring()
-
-            if hasattr(self.health_checker, "start_background_checks"):
-                self.health_checker.start_background_checks()
-
-            self.logger.info("Monitoring services started")
-
-        except Exception as e:
-            self.logger.error(f"Failed to start monitoring: {e}")
-
-    def show_status(self):
-        """Show system status"""
-        print("\nHosting Manager Status v3.0")
-        print("=" * 50)
-
-        # System info
-        print(f"Read-only mode: {self.hosting_manager.readonly_filesystem}")
-        print(f"Web root: {self.config.get('web_root')}")
-        print(f"Database: {self.config.get('database_path')}")
-
-        # Services status
-        status = self.hosting_manager.get_system_status()
-        print(f"Nginx: {'Running' if status.get('nginx_running', False) else 'Stopped'}")
-        print(f"Database: {'Connected' if status.get('database_connected', False) else 'Failed'}")
-        print(f"Active domains: {status.get('domain_count', 0)}")
-        print(f"Running apps: {status.get('active_apps', 0)}")
-
-        # Process details
-        try:
-            processes = self.process_monitor.get_all_processes()
-            if processes:
-                print(f"\nRunning Processes:")
-                for proc in processes:
-                    status_icon = "✓" if proc.get("status") == "online" else "✗"
-                    print(
-                        f"  {status_icon} {proc.get('name', 'Unknown')} (PID: {proc.get('pid', 'N/A')}) - {proc.get('memory', 'N/A')}"
-                    )
-            else:
-                print("\nNo processes found")
-        except Exception as e:
-            print(f"Error getting process details: {e}")
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Hosting Manager v3.0")
-    parser.add_argument("--setup", action="store_true", help="Setup system")
-    parser.add_argument("--api", action="store_true", help="Start minimal API server")
-    parser.add_argument("--monitor", action="store_true", help="Start monitoring only")
-    parser.add_argument("--status", action="store_true", help="Show system status")
-    parser.add_argument("--api-port", type=int, default=5000, help="API server port")
-    parser.add_argument("--api-host", default="0.0.0.0", help="API server host")
-
-    # Legacy command support
-    parser.add_argument("command", nargs="?", help="Legacy command")
-    parser.add_argument("domain", nargs="?", help="Domain name")
-    parser.add_argument("port", nargs="?", type=int, help="Port number")
-    parser.add_argument("site_type", nargs="?", default="static", help="Site type")
-
-    args = parser.parse_args()
-
-    try:
-        app = HostingApplication()
-    except Exception as e:
-        print(f"FATAL: Failed to initialize application: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-
-    try:
-        if args.setup:
-            success = app.setup_system()
-            sys.exit(0 if success else 1)
-
-        elif args.api:
-            app.start_api_server(host=args.api_host, port=args.api_port)
-
-        elif args.monitor:
-            app.start_monitoring()
-            print("Monitoring started. Press Ctrl+C to stop.")
-            try:
-                import time
-                while True:
-                    time.sleep(60)
-            except KeyboardInterrupt:
-                print("\nMonitoring stopped")
-
-        elif args.status:
-            app.show_status()
-
-        # Legacy commands
-        elif args.command == "deploy" and args.domain and args.port:
-            success = app.hosting_manager.deploy_domain(
-                args.domain, args.port, args.site_type
-            )
-            sys.exit(0 if success else 1)
-
-        elif args.command == "remove" and args.domain:
-            success = app.hosting_manager.remove_domain(args.domain)
-            sys.exit(0 if success else 1)
-
-        elif args.command == "list":
-            domains = app.hosting_manager.list_domains()
-            print("\nActive Domains:")
-            if domains:
-                for domain in domains:
-                    print(f"  {domain['domain_name']} (Port: {domain['port']}, Type: {domain['site_type']})")
-            else:
-                print("  No active domains found")
-
-        else:
-            print("Hosting Manager v3.0 - Modular Architecture (API Refactored)")
-            print("=" * 60)
-            print("\nCommands:")
-            print("  --setup                 Complete system setup")
-            print("  --api                   Start minimal API server")
-            print("  --monitor              Start monitoring services")
-            print("  --status               Show system status")
-            print("\nLegacy commands:")
-            print("  deploy <domain> <port> [type]    Deploy domain")
-            print("  remove <domain>                  Remove domain")
-            print("  list                             List domains")
-            print("\nNote: Full API functionality was refactored out.")
-            print("Use --api for basic health checks and monitoring.")
-
-    except KeyboardInterrupt:
-        print("\nShutdown requested")
-        sys.exit(0)
-    except Exception as e:
-        print(f"Error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
-EOF
-
-# Fix imports in existing files
-print_status "Fixing missing imports..."
-
-# Add missing shutil import to process_monitor if not present
-if [ -f "deploy-temp/src/monitoring/process_monitor.py" ]; then
-    if ! grep -q "import shutil" deploy-temp/src/monitoring/process_monitor.py; then
-        sed -i '6a import shutil' deploy-temp/src/monitoring/process_monitor.py
-    fi
+# Ensure the hosting_manager.py imports from api.app (not hardcoded inline Flask)
+if grep -q "from api.app import HostingAPI" deploy-temp/hosting_manager.py; then
+    print_success "hosting_manager.py correctly imports modular API"
+else
+    print_warning "hosting_manager.py may not be using modular API - checking..."
     
-    # Add set_hosting_manager method if not present
-    if ! grep -q "def set_hosting_manager" deploy-temp/src/monitoring/process_monitor.py; then
-        sed -i '/def __init__(self, config, logger):/a\\n    def set_hosting_manager(self, hosting_manager):\n        """Set reference to hosting manager for database access"""\n        self.hosting_manager = hosting_manager\n' deploy-temp/src/monitoring/process_monitor.py
+    # If it doesn't import api.app, fix it
+    if ! grep -q "from api.app import" deploy-temp/hosting_manager.py; then
+        print_status "Fixing hosting_manager.py to use modular API..."
+        sed -i 's/from api.server import HostingAPI/from api.app import HostingAPI/' deploy-temp/hosting_manager.py 2>/dev/null || true
+        
+        # Make sure there's an import for api.app somewhere
+        if ! grep -q "from api.app import HostingAPI" deploy-temp/hosting_manager.py; then
+            # Add the import after other imports
+            sed -i '/from utils.logger import Logger/a from api.app import HostingAPI' deploy-temp/hosting_manager.py
+        fi
     fi
 fi
 
-# Add missing json import to logger if not present
-if [ -f "deploy-temp/src/utils/logger.py" ]; then
-    if ! grep -q "import json" deploy-temp/src/utils/logger.py; then
-        sed -i '6a import json' deploy-temp/src/utils/logger.py
-    fi
-fi
-
-# Create requirements.txt
+# Create requirements.txt with all needed dependencies
 cat > deploy-temp/requirements.txt << 'EOF'
 flask>=2.3.0
 flask-cors>=4.0.0
 gunicorn>=20.1.0
 psutil>=5.9.0
 requests>=2.31.0
+sqlite3
 EOF
 
-# Create __init__.py files
+# Create all necessary __init__.py files for proper imports
+print_status "Creating package structure..."
 touch deploy-temp/src/__init__.py
 touch deploy-temp/src/api/__init__.py
+touch deploy-temp/src/api/routes/__init__.py
+touch deploy-temp/src/api/services/__init__.py
 touch deploy-temp/src/core/__init__.py
 touch deploy-temp/src/monitoring/__init__.py
 touch deploy-temp/src/utils/__init__.py
 
-print_success "Deployment files prepared"
+# Verify the modular API structure is intact
+print_status "Verifying modular API structure..."
+if [ -f "deploy-temp/src/api/app.py" ] && [ -f "deploy-temp/src/api/routes/__init__.py" ]; then
+    print_success "Modular API structure preserved"
+else
+    print_error "Modular API structure broken"
+    exit 1
+fi
+
+# Check that api.app has route registration
+if grep -q "register_all_routes" deploy-temp/src/api/app.py; then
+    print_success "API app includes route registration"
+else
+    print_error "API app missing route registration - deployment will only have 3 endpoints"
+    print_status "Your src/api/app.py needs to call register_all_routes()"
+    exit 1
+fi
+
+print_success "Deployment files prepared with modular API"
 
 # Create deployment package
 print_status "Creating deployment package..."
 cd deploy-temp
-tar -czf ../hosting-manager-refactored.tar.gz .
+tar -czf ../hosting-manager-modular.tar.gz .
 cd ..
 
 # Upload to server
 print_status "Uploading to server $REMOTE_HOST..."
-scp hosting-manager-refactored.tar.gz "${REMOTE_USER}@${REMOTE_HOST}:/tmp/"
+scp hosting-manager-modular.tar.gz "${REMOTE_USER}@${REMOTE_HOST}:/tmp/"
 
 # Deploy on remote server
-print_status "Deploying on remote server..."
+print_status "Deploying modular API on remote server..."
 ssh "${REMOTE_USER}@${REMOTE_HOST}" << 'REMOTE_SCRIPT'
 set -e
 
@@ -392,8 +152,8 @@ echo "Creating directory structure..."
 mkdir -p /opt/hosting-manager
 cd /opt/hosting-manager
 
-echo "Extracting files..."
-tar -xzf /tmp/hosting-manager-refactored.tar.gz
+echo "Extracting modular API files..."
+tar -xzf /tmp/hosting-manager-modular.tar.gz
 
 echo "Installing Python dependencies..."
 pip3 install -r requirements.txt
@@ -402,10 +162,32 @@ echo "Setting permissions..."
 chown -R www-data:www-data /opt/hosting-manager
 chmod +x hosting_manager.py
 
-echo "Creating systemd service..."
+echo "Testing modular API imports..."
+python3 -c "
+import sys
+sys.path.insert(0, 'src')
+try:
+    from api.app import HostingAPI
+    print('✓ HostingAPI import OK')
+    from api.routes import register_all_routes
+    print('✓ register_all_routes import OK')
+    from api.services import NginxService
+    print('✓ Services import OK')
+    print('✓ All imports successful - modular API ready')
+except Exception as e:
+    print(f'✗ Import failed: {e}')
+    exit(1)
+"
+
+if [ $? -ne 0 ]; then
+    echo "Import test failed - aborting deployment"
+    exit 1
+fi
+
+echo "Creating systemd service for modular API..."
 cat > /etc/systemd/system/hosting-manager.service << 'EOF'
 [Unit]
-Description=Hosting Manager v3.0 - Refactored (No API Server)
+Description=Hosting Manager v3.0 - Complete Next.js Platform
 After=network.target nginx.service
 
 [Service]
@@ -431,69 +213,98 @@ systemctl daemon-reload
 echo "Running system setup..."
 python3 hosting_manager.py --setup || echo "Setup had some warnings, continuing..."
 
-echo "Testing basic functionality..."
-python3 hosting_manager.py --status || echo "Status check had issues, continuing..."
-
-echo "Enabling and starting service..."
+echo "Enabling and starting modular API service..."
 systemctl enable hosting-manager
 systemctl start hosting-manager
 
 echo "Cleanup..."
-rm -f /tmp/hosting-manager-refactored.tar.gz
+rm -f /tmp/hosting-manager-modular.tar.gz
 
-echo "Deployment completed!"
+echo "Modular API deployment completed!"
 REMOTE_SCRIPT
 
 # Cleanup local files
-rm hosting-manager-refactored.tar.gz
+rm hosting-manager-modular.tar.gz
 rm -rf deploy-temp
 
 # Wait for service to start
-print_status "Waiting for service to start..."
-sleep 5
+print_status "Waiting for modular API service to start..."
+sleep 8
 
 # Health check
-print_status "Running health check..."
+print_status "Running comprehensive health check..."
 if ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s --connect-timeout 10 http://localhost:5000/api/health" | grep -q "healthy"; then
     print_success "Health check passed!"
-    print_success "Minimal API server is running at http://$REMOTE_HOST:5000"
+    print_success "Modular API server is running at http://$REMOTE_HOST:5000"
     
-    # Test endpoints
-    print_status "Testing endpoints..."
-    
-    echo "Testing /api/status..."
-    if ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s --connect-timeout 10 http://localhost:5000/api/status" | grep -q "success"; then
-        print_success "/api/status endpoint is working!"
+    # Test the startup-info endpoint to verify route registration
+    print_status "Testing modular route registration..."
+    startup_response=$(ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s --connect-timeout 10 http://localhost:5000/api/startup-info" 2>/dev/null)
+    if echo "$startup_response" | grep -q "startup_time"; then
+        print_success "/api/startup-info endpoint working - route registration successful!"
+        
+        # Extract route count from startup-info
+        route_count=$(echo "$startup_response" | grep -o '"total_api_routes":[0-9]*' | cut -d: -f2 | head -1)
+        if [ ! -z "$route_count" ] && [ "$route_count" -gt 10 ]; then
+            print_success "Found $route_count API routes - modular system working!"
+        else
+            print_warning "Only $route_count routes found - some modules may have failed"
+        fi
     else
-        print_warning "/api/status endpoint may have issues"
+        print_warning "/api/startup-info not available - using basic tests"
     fi
     
-    echo "Testing /api/processes..."  
-    if ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s --connect-timeout 10 http://localhost:5000/api/processes" | grep -q "success"; then
-        print_success "/api/processes endpoint is working!"
+    # Test core endpoints
+    print_status "Testing core endpoints..."
+    for endpoint in "status" "processes" "domains"; do
+        if ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s --connect-timeout 5 http://localhost:5000/api/$endpoint" | grep -q '"success"'; then
+            print_success "/api/$endpoint is working"
+        else
+            print_warning "/api/$endpoint may have issues"
+        fi
+    done
+    
+    # Test modular endpoints
+    print_status "Testing modular endpoints..."
+    modular_endpoints=("monitoring/dashboard" "monitoring/health" "pm2/list" "nginx/status")
+    working_count=0
+    
+    for endpoint in "${modular_endpoints[@]}"; do
+        if ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s --connect-timeout 5 http://localhost:5000/api/$endpoint" | grep -q '"success"'; then
+            print_success "/api/$endpoint is working"
+            ((working_count++))
+        else
+            print_warning "/api/$endpoint not available"
+        fi
+    done
+    
+    if [ $working_count -gt 2 ]; then
+        print_success "Modular API deployment successful! $working_count advanced endpoints working"
     else
-        print_warning "/api/processes endpoint may have issues"
+        print_warning "Modular API partially working - $working_count advanced endpoints available"
     fi
     
 else
     print_error "Health check failed - checking service status..."
     ssh "${REMOTE_USER}@${REMOTE_HOST}" "systemctl status hosting-manager --no-pager -l"
     echo ""
-    print_status "Checking logs..."
-    ssh "${REMOTE_USER}@${REMOTE_HOST}" "journalctl -u hosting-manager --no-pager -n 20"
+    print_status "Checking logs for errors..."
+    ssh "${REMOTE_USER}@${REMOTE_HOST}" "journalctl -u hosting-manager --no-pager -n 30"
 fi
 
-print_success "Deployment script completed!"
+print_success "Modular API deployment script completed!"
 echo ""
-echo "📋 Service Information:"
+echo "Service Information:"
 echo "   URL: http://$REMOTE_HOST:5000"
 echo "   Status: ssh root@$REMOTE_HOST 'systemctl status hosting-manager'"
 echo "   Logs: ssh root@$REMOTE_HOST 'journalctl -u hosting-manager -f'"
 echo ""
-echo "🧪 Test Commands:"
-echo "   curl http://$REMOTE_HOST:5000/api/health"
-echo "   curl http://$REMOTE_HOST:5000/api/status"
-echo "   curl http://$REMOTE_HOST:5000/api/processes"
+echo "Test Commands:"
+echo "   curl http://$REMOTE_HOST:5000/api/health | jq"
+echo "   curl http://$REMOTE_HOST:5000/api/startup-info | jq"
+echo "   curl http://$REMOTE_HOST:5000/api/monitoring/dashboard | jq"
+echo "   curl http://$REMOTE_HOST:5000/api/domains | jq"
+echo "   curl http://$REMOTE_HOST:5000/api/processes | jq"
 echo ""
-echo "ℹ️  Note: This is a minimal API server since the full API was refactored out."
-echo "   Only basic health checks and monitoring endpoints are available."
+echo "Route Registration Debug:"
+echo "   curl http://$REMOTE_HOST:5000/api/_debug/routes/load-status | jq"

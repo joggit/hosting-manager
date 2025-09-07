@@ -1,0 +1,83 @@
+# hosting_config.yaml - Configuration for automated hosting setup
+# Place this in your hosting manager root directory
+
+server:
+  name: "Multi-Domain Hosting Server"
+  version: "1.0"
+  environment: "production"  # production, staging, development
+  
+database:
+  path: "/tmp/hosting/hosting.db"
+  backup_enabled: true
+  backup_interval: "daily"
+
+domains:
+  smartwave.co.za:
+    email: "admin@smartwave.co.za"
+    port_range: [3000, 3099]
+    ssl_enabled: true
+    wildcard_ssl: true
+    auto_renew: true
+  
+  datablox.co.za:
+    email: "admin@datablox.co.za" 
+    port_range: [3100, 3199]
+    ssl_enabled: true
+    wildcard_ssl: true
+    auto_renew: true
+    
+  mondaycafe.co.za:
+    email: "admin@mondaycafe.co.za"
+    port_range: [3200, 3299] 
+    ssl_enabled: true
+    wildcard_ssl: true
+    auto_renew: true
+
+ssl:
+  provider: "letsencrypt"
+  key_size: 2048
+  challenge_methods:
+    - "http"      # Try HTTP challenge first
+    - "standalone" # Fallback to standalone
+    - "self_signed" # Development fallback
+  
+  renewal:
+    enabled: true
+    check_interval: "daily"
+    renew_before_days: 30
+    post_renewal_hook: "systemctl reload nginx"
+
+nginx:
+  config_path: "/etc/nginx/sites-available"
+  enabled_path: "/etc/nginx/sites-enabled"
+  ssl_protocols: ["TLSv1.2", "TLSv1.3"]
+  security_headers: true
+
+logging:
+  level: "INFO"
+  file: "/var/log/hosting/hosting.log"
+  max_size: "100MB"
+  backup_count: 5
+
+pm2:
+  ecosystem_config: true
+  auto_restart: true
+  max_memory_restart: "512M"
+  log_rotation: true
+
+security:
+  fail2ban_enabled: true
+  firewall_enabled: true
+  ssh_key_only: false
+  
+monitoring:
+  health_checks: true
+  uptime_monitoring: true
+  ssl_expiry_alerts: true
+  disk_usage_alerts: 80  # percentage
+
+first_run:
+  auto_setup: true
+  install_dependencies: true
+  configure_firewall: false  # Set to true for production
+  create_monitoring: true
