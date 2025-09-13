@@ -1,0 +1,17 @@
+{
+  "name": "simple-test",
+  "files": {
+    "package.json": "{\"name\":\"simple-test\",\"version\":\"1.0.0\",\"scripts\":{\"start\":\"node server.js\"},\"dependencies\":{\"express\":\"^4.18.0\"}}",
+    "server.js": "const express = require('express'); const app = express(); app.get('/', (req, res) => res.send('Hello World from Simple Test on Subdomain!')); const port = process.env.PORT || 3000; app.listen(port, () => console.log(`Server running on port ${port}`));"
+  },
+  "domain_config": {
+    "subdomain": "simple-test",
+    "parent_domain": "datablox.co.za"
+  },
+  "deployConfig": {
+    "port": 3150,
+    "env": {
+      "NODE_ENV": "production"
+    }
+  }
+}
