@@ -30,7 +30,7 @@ class HostingAPI:
     ):
         self.app = Flask(__name__)
         allowed = os.getenv(
-            "ALLOWED_ORIGINS", "http://localhost:3000,https://your-frontend.example"
+            "ALLOWED_ORIGINS", "http://localhost:3001,https://your-frontend.example"
         ).split(",")
         CORS(
             self.app,

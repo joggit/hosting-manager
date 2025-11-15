@@ -1,7 +1,7 @@
 # src/api/routes/domains.py
 """
 API routes for dynamic domain and subdomain management with full CRUD operations
-Supports dynamic parent domain creation, complete subdomain lifecycle management, and SSL
+Supports dynamic parent domain creation and complete subdomain lifecycle management
 """
 
 import json
@@ -30,10 +30,12 @@ def allocate_port_for_deployment(preferred_port=None, start_range=3001, end_rang
         except:
             return False
 
+    # Try preferred port first
     if preferred_port and start_range <= preferred_port <= end_range:
         if is_port_available(preferred_port):
             return preferred_port
 
+    # Find first available port in range
     for port in range(start_range, end_range + 1):
         if is_port_available(port):
             return port
@@ -45,12 +47,6 @@ def cleanup_pm2_processes_for_domain(domain_name, logger):
     """Cleanup PM2 processes for a domain"""
     stopped_processes = []
     errors = []
-    domain_variations = [
-        domain_name,  # datablox.co.za
-        domain_name.replace(".", ""),  # databloxcoza
-        domain_name.replace(".", "-"),  # datablox-co-za
-        domain_name.split(".")[0],  # datablox
-    ]
 
     try:
         result = subprocess.run(["pm2", "jlist"], capture_output=True, text=True)
@@ -67,8 +63,11 @@ def cleanup_pm2_processes_for_domain(domain_name, logger):
         matching_processes = []
         for process in pm2_data:
             process_name = process.get("name", "")
-            # Check if process name matches any variation
-            if any(var in process_name.lower() for var in domain_variations):
+            if (
+                process_name == domain_name
+                or (len(domain_parts) > 1 and process_name == domain_parts[0])
+                or domain_name in process_name
+            ):
                 matching_processes.append(process)
 
         for process in matching_processes:
@@ -115,49 +114,42 @@ def cleanup_pm2_processes_for_domain(domain_name, logger):
         }
 
 
-# Remove nginx config for domain
 def cleanup_nginx_config(domain_name, logger):
-    """Remove nginx configuration"""
+    """Remove nginx configuration files for domain"""
     removed_files = []
     errors = []
-
     try:
-        enabled_path = f"/etc/nginx/sites-enabled/{domain_name}"
-        available_path = f"/etc/nginx/sites-available/{domain_name}"
-
-        # Remove symlink first
-        if os.path.exists(enabled_path):
-            try:
-                os.remove(enabled_path)
-                removed_files.append(enabled_path)
-                logger.info(f"Removed {enabled_path}")
-            except Exception as e:
-                errors.append(f"Failed to remove {enabled_path}: {str(e)}")
-
-        # Reload nginx (DON'T test, just reload)
+        nginx_files = [
+            f"/etc/nginx/sites-available/{domain_name}",
+            f"/etc/nginx/sites-enabled/{domain_name}",
+        ]
+        for nginx_file in nginx_files:
+            if os.path.exists(nginx_file):
+                try:
+                    if os.path.islink(nginx_file):
+                        os.unlink(nginx_file)  # Remove symlink
+                    else:
+                        os.remove(nginx_file)  # Remove regular file
+                    removed_files.append(nginx_file)
+                    logger.info(f"Removed nginx config: {nginx_file}")
+                except Exception as e:
+                    errors.append(f"Failed to remove {nginx_file}: {str(e)}")
+                    logger.error(f"Failed to remove nginx config {nginx_file}: {e}")
+        # Test and reload nginx configuration
         try:
-            result = subprocess.run(
-                ["nginx", "-s", "reload"], capture_output=True, text=True, timeout=10
+            test_result = subprocess.run(
+                ["nginx", "-t"], capture_output=True, text=True, timeout=10
             )
-            if result.returncode == 0:
-                logger.info("Nginx reloaded successfully")
+            if test_result.returncode == 0:
+                reload_result = subprocess.run(
+                    ["systemctl", "reload", "nginx"], capture_output=True, timeout=30
+                )
+                if reload_result.returncode != 0:
+                    errors.append("Failed to reload nginx after cleanup")
             else:
-                logger.warning(f"Nginx reload had warnings: {result.stderr}")
-                # Don't add to errors - reload can succeed with warnings
-        except subprocess.TimeoutExpired:
-            errors.append("Nginx reload timed out")
+                errors.append(f"Nginx config test failed: {test_result.stderr}")
         except Exception as e:
-            logger.warning(f"Nginx reload failed: {e}")
-            # Don't add to errors - config is still removed
-
-        # Now safe to remove the config file
-        if os.path.exists(available_path):
-            try:
-                os.remove(available_path)
-                removed_files.append(available_path)
-                logger.info(f"Removed {available_path}")
-            except Exception as e:
-                errors.append(f"Failed to remove {available_path}: {str(e)}")
+            errors.append(f"Nginx reload error: {str(e)}")
 
         return {
             "removed_files": removed_files,
@@ -166,9 +158,9 @@ def cleanup_nginx_config(domain_name, logger):
         }
 
     except Exception as e:
-        logger.error(f"Nginx cleanup error: {e}")
+        logger.error(f"Nginx cleanup error for {domain_name}: {e}")
         return {
-            "removed_files": removed_files,
+            "removed_files": [],
             "errors": [f"Nginx cleanup failed: {str(e)}"],
             "success": False,
         }
@@ -179,13 +171,14 @@ def cleanup_application_files(domain_name, logger):
     removed_files = []
     errors = []
     try:
+        # Application directories to check
         app_directories = [
             f"/tmp/www/domains/{domain_name}",
             f"/tmp/www/domains/{domain_name.replace('.', '-')}",
             f"/opt/hosting-manager/apps/{domain_name}",
             f"/var/www/{domain_name}",
         ]
-
+        # Add subdomain-specific directories
         domain_parts = domain_name.split(".")
         if len(domain_parts) > 1:
             subdomain = domain_parts[0]
@@ -200,6 +193,7 @@ def cleanup_application_files(domain_name, logger):
         for app_dir in app_directories:
             if os.path.exists(app_dir) and os.path.isdir(app_dir):
                 try:
+                    # Calculate directory size for logging
                     try:
                         dir_size = sum(
                             os.path.getsize(os.path.join(dirpath, filename))
@@ -217,6 +211,7 @@ def cleanup_application_files(domain_name, logger):
                 except Exception as e:
                     errors.append(f"Failed to remove directory {app_dir}: {str(e)}")
 
+        # Remove log files
         log_patterns = [
             f"/tmp/process-logs/{domain_name}*.log",
             f"/tmp/process-logs/{domain_parts[0] if len(domain_parts) > 1 else domain_name}*.log",
@@ -235,6 +230,7 @@ def cleanup_application_files(domain_name, logger):
             except Exception as e:
                 errors.append(f"Failed to remove logs matching {pattern}: {str(e)}")
 
+        # Remove SSL certificates
         ssl_dirs = [
             f"/etc/letsencrypt/live/{domain_name}",
             f"/etc/letsencrypt/archive/{domain_name}",
@@ -298,6 +294,7 @@ class DomainManager:
                 """
                 )
 
+                # Create index for better performance
                 cursor.execute(
                     "CREATE INDEX IF NOT EXISTS idx_parent_domains_name ON parent_domains(domain_name)"
                 )
@@ -321,9 +318,11 @@ class DomainManager:
     ):
         """Add a new parent domain"""
         try:
+            # Validate domain format
             if not self._is_valid_domain(domain_name):
                 return False, "Invalid domain format"
 
+            # Auto-assign port range if not provided
             if not port_range_start or not port_range_end:
                 port_range_start, port_range_end = self._get_next_port_range()
 
@@ -381,6 +380,7 @@ class DomainManager:
 
             domains = []
             for row in cursor.fetchall():
+                # Get subdomain count
                 subdomain_count = self._get_subdomain_count(row[0])
 
                 domain_info = {
@@ -462,6 +462,7 @@ class DomainManager:
             if not conn:
                 return False, "Database connection failed"
 
+            # Build update query dynamically
             update_fields = []
             values = []
 
@@ -508,6 +509,7 @@ class DomainManager:
     def delete_parent_domain(self, domain_name, force=False):
         """Delete parent domain (only if no subdomains exist or force=True)"""
         try:
+            # Check for existing subdomains
             subdomain_count = self._get_subdomain_count(domain_name)
 
             if subdomain_count > 0 and not force:
@@ -523,6 +525,7 @@ class DomainManager:
             cursor = conn.cursor()
 
             if force and subdomain_count > 0:
+                # Delete all subdomains first
                 cursor.execute(
                     "SELECT domain_name FROM domains WHERE domain_name LIKE ?",
                     (f"%.{domain_name}",),
@@ -531,8 +534,10 @@ class DomainManager:
 
                 for subdomain_row in subdomains:
                     subdomain = subdomain_row[0]
+                    # Cleanup subdomain completely
                     self._cleanup_subdomain_completely(subdomain)
 
+            # Mark parent domain as deleted
             cursor.execute(
                 "UPDATE parent_domains SET status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE domain_name = ?",
                 (domain_name,),
@@ -621,16 +626,25 @@ class DomainManager:
         if not domain or len(domain) > 253:
             return False
 
+        # Basic domain regex
         pattern = r"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
         return re.match(pattern, domain) is not None
 
     def _cleanup_subdomain_completely(self, subdomain):
         """Complete cleanup of a subdomain"""
         try:
+            # Stop processes
             cleanup_pm2_processes_for_domain(subdomain, self.logger)
+
+            # Remove nginx config
             cleanup_nginx_config(subdomain, self.logger)
+
+            # Remove files
             cleanup_application_files(subdomain, self.logger)
+
+            # Remove from database
             self.hosting_manager.remove_domain(subdomain)
+
         except Exception as e:
             self.logger.error(f"Failed complete cleanup for {subdomain}: {e}")
 
@@ -688,12 +702,20 @@ class PreDeploymentValidator:
         }
 
         try:
+            # 1. Database check - most critical
             self._check_database(domain_name, validation_results)
+
+            # 2. Nginx configuration checks
             self._check_nginx_available(domain_name, validation_results)
             self._check_nginx_enabled(domain_name, validation_results)
+
+            # 3. Filesystem check
             self._check_filesystem(domain_name, validation_results)
+
+            # 4. Process check (PM2/systemd)
             self._check_processes(domain_name, validation_results)
 
+            # 5. Determine overall availability
             validation_results["is_available"] = (
                 len(validation_results["conflicts"]) == 0
             )
@@ -792,6 +814,7 @@ class PreDeploymentValidator:
             if os.path.exists(config_path):
                 results["checks"]["nginx_available"]["exists"] = True
 
+                # Get file details
                 stat_info = os.stat(config_path)
                 file_size = stat_info.st_size
                 modified_time = datetime.fromtimestamp(stat_info.st_mtime).isoformat()
@@ -843,6 +866,7 @@ class PreDeploymentValidator:
             if os.path.exists(enabled_path):
                 results["checks"]["nginx_enabled"]["exists"] = True
 
+                # Get file/symlink details
                 stat_info = os.stat(enabled_path)
                 is_symlink = os.path.islink(enabled_path)
 
@@ -856,6 +880,7 @@ class PreDeploymentValidator:
                 if is_symlink:
                     try:
                         details["target"] = os.readlink(enabled_path)
+                        # Check if target exists
                         details["target_exists"] = os.path.exists(details["target"])
                     except Exception as e:
                         details["symlink_error"] = str(e)
@@ -896,6 +921,7 @@ class PreDeploymentValidator:
             if os.path.exists(domain_path):
                 results["checks"]["filesystem"]["exists"] = True
 
+                # Get directory details
                 try:
                     file_count = len(os.listdir(domain_path))
                     dir_size = self._get_directory_size(domain_path)
@@ -949,7 +975,10 @@ class PreDeploymentValidator:
     def _check_processes(self, domain_name, results):
         """Check if processes are running for this domain"""
         try:
+            # Check PM2 processes
             pm2_processes = self._check_pm2_processes(domain_name)
+
+            # Check systemd services
             systemd_services = self._check_systemd_services(domain_name)
 
             all_processes = pm2_processes + systemd_services
@@ -1005,6 +1034,7 @@ class PreDeploymentValidator:
             pm2_data = json.loads(result.stdout)
             matching_processes = []
 
+            # Extract subdomain part for matching
             subdomain_part = (
                 domain_name.split(".")[0] if "." in domain_name else domain_name
             )
@@ -1012,6 +1042,7 @@ class PreDeploymentValidator:
             for process in pm2_data:
                 process_name = process.get("name", "")
 
+                # Match by exact name or subdomain
                 if (
                     process_name == domain_name
                     or process_name == subdomain_part
@@ -1036,10 +1067,12 @@ class PreDeploymentValidator:
     def _check_systemd_services(self, domain_name):
         """Check systemd for services matching domain"""
         try:
+            # Extract subdomain part
             subdomain_part = (
                 domain_name.split(".")[0] if "." in domain_name else domain_name
             )
 
+            # Check for nodejs-{subdomain} service
             service_name = f"nodejs-{subdomain_part}"
 
             result = subprocess.run(
@@ -1049,7 +1082,7 @@ class PreDeploymentValidator:
                 timeout=5,
             )
 
-            if result.returncode == 0:
+            if result.returncode == 0:  # Service is active
                 return [
                     {"name": service_name, "status": "active", "manager": "systemd"}
                 ]
@@ -1143,10 +1176,13 @@ class PreDeploymentValidator:
 def _check_domain_comprehensive(deps, domain_name):
     """Use the comprehensive domain checker from nginx service"""
     try:
+        # Get comprehensive check using the nginx routes directly instead of importing NginxService
         import requests
+        import json
 
+        # Make internal API call to the working nginx endpoint
         try:
-            base_url = "http://localhost:5000"
+            base_url = "http://localhost:5000"  # or get from config
             response = requests.post(
                 f"{base_url}/api/nginx/check-domain",
                 json={"domain": domain_name},
@@ -1165,9 +1201,10 @@ def _check_domain_comprehensive(deps, domain_name):
                         "available": True,
                         "details": {},
                         "message": "",
-                    },
+                    },  # nginx endpoint checks both
                 }
             else:
+                # Fallback if API call fails
                 nginx_results = {
                     "nginx_available": {
                         "available": True,
@@ -1195,6 +1232,7 @@ def _check_domain_comprehensive(deps, domain_name):
                 },
             }
 
+        # Add database check
         results = {"database": {"available": True, "details": {}, "message": ""}}
 
         try:
@@ -1229,11 +1267,13 @@ def _check_domain_comprehensive(deps, domain_name):
             deps["logger"].error(f"Database check failed: {e}")
             results["database"]["message"] = f"Database check failed: {str(e)}"
 
+        # Combine nginx and database results
         results.update(nginx_results)
         return results
 
     except Exception as e:
         deps["logger"].error(f"Comprehensive domain check failed: {e}")
+        # Fallback to basic database check only
         return {
             "database": {
                 "available": True,
@@ -1254,12 +1294,13 @@ def _check_domain_comprehensive(deps, domain_name):
 
 
 def register_domain_routes(app, deps):
-    """Register dynamic domain management routes with full CRUD operations and SSL"""
+    """Register dynamic domain management routes with full CRUD operations"""
 
+    # Import utilities
     try:
         from ..utils import APIResponse, handle_api_errors
     except ImportError:
-
+        # Fallback utilities
         class APIResponse:
             @staticmethod
             def success(data):
@@ -1296,13 +1337,58 @@ def register_domain_routes(app, deps):
 
             return decorator
 
-    # Initialize managers
+    # Initialize domain manager
     domain_manager = DomainManager(deps["hosting_manager"], deps["logger"])
-    ssl_manager = create_ssl_manager(deps["logger"], deps["config"])
 
     # ===============================================================================
     # PARENT DOMAIN MANAGEMENT (CRUD)
     # ===============================================================================
+    # Simple POST route to fix the 405 error
+    @app.route("/api/domains", methods=["POST"])
+    def create_parent_domain_simple():
+        """Create a new parent domain - simplified version"""
+        try:
+            data = request.json or {}
+
+            if not data.get("domain_name"):
+                return (
+                    jsonify({"success": False, "error": "domain_name is required"}),
+                    400,
+                )
+
+            domain_name = data["domain_name"]
+
+            # Basic validation
+            if not domain_name or len(domain_name) > 253:
+                return jsonify({"success": False, "error": "Invalid domain name"}), 400
+
+            # Try to add to domain manager
+            success, message = domain_manager.add_parent_domain(
+                domain_name,
+                port_range_start=data.get("port_range_start"),
+                port_range_end=data.get("port_range_end"),
+                description=data.get("description", f"{domain_name} domain"),
+                ssl_enabled=data.get("ssl_enabled", True),
+            )
+
+            if success:
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": message,
+                        "domain": {
+                            "domain_name": domain_name,
+                            "ssl_enabled": data.get("ssl_enabled", True),
+                            "status": "active",
+                        },
+                    }
+                )
+            else:
+                return jsonify({"success": False, "error": message}), 400
+
+        except Exception as e:
+            deps["logger"].error(f"Failed to create parent domain: {e}")
+            return jsonify({"success": False, "error": str(e)}), 500
 
     @app.route("/api/domains", methods=["GET"])
     @handle_api_errors(deps["logger"])
@@ -1316,6 +1402,7 @@ def register_domain_routes(app, deps):
                     "total_domains": len(domains),
                 }
             )
+
         except Exception as e:
             deps["logger"].error(f"Error getting domains: {e}")
             return APIResponse.success(
@@ -1325,7 +1412,7 @@ def register_domain_routes(app, deps):
     @app.route("/api/domains", methods=["POST"])
     @handle_api_errors(deps["logger"])
     def create_parent_domain():
-        """Create a new parent domain with optional SSL"""
+        """Create a new parent domain"""
         try:
             data = request.json
             if not data:
@@ -1339,13 +1426,6 @@ def register_domain_routes(app, deps):
             port_range_end = data.get("port_range_end")
             description = data.get("description", f"{domain_name} domain")
             ssl_enabled = data.get("ssl_enabled", True)
-            ssl_email = data.get("ssl_email", "").strip()
-
-            # Validate SSL requirements
-            if ssl_enabled and not ssl_email:
-                return APIResponse.bad_request(
-                    "ssl_email is required when ssl_enabled is True"
-                )
 
             # Validate port range
             if port_range_start and port_range_end:
@@ -1358,71 +1438,27 @@ def register_domain_routes(app, deps):
                         "port_range_start must be less than port_range_end"
                     )
 
-            # Create parent domain record
             success, message = domain_manager.add_parent_domain(
                 domain_name, port_range_start, port_range_end, description, ssl_enabled
             )
 
-            if not success:
+            if success:
+                return APIResponse.success(
+                    {
+                        "message": message,
+                        "domain": {
+                            "domain_name": domain_name,
+                            "port_range": [
+                                port_range_start or "auto",
+                                port_range_end or "auto",
+                            ],
+                            "description": description,
+                            "ssl_enabled": ssl_enabled,
+                        },
+                    }
+                )
+            else:
                 return APIResponse.bad_request(message)
-
-            response_data = {
-                "message": message,
-                "domain": {
-                    "domain_name": domain_name,
-                    "port_range": [
-                        port_range_start or "auto",
-                        port_range_end or "auto",
-                    ],
-                    "description": description,
-                    "ssl_enabled": ssl_enabled,
-                },
-            }
-
-            # Setup SSL if enabled
-            if ssl_enabled:
-                deps["logger"].info(f"Setting up SSL certificate for {domain_name}")
-
-                try:
-                    ssl_success, ssl_message, cert_info = ssl_manager.setup_certificate(
-                        domain_name, ssl_email
-                    )
-
-                    if ssl_success:
-                        response_data["message"] = (
-                            f"{message}. SSL certificate installed successfully."
-                        )
-                        response_data["domain"]["ssl_certificate"] = cert_info
-                        response_data["domain"]["ssl_email"] = ssl_email
-                        response_data["domain"]["https_url"] = f"https://{domain_name}"
-
-                        deps["logger"].info(
-                            f"SSL certificate successfully installed for {domain_name}"
-                        )
-                    else:
-                        # SSL setup failed but domain was created
-                        response_data["domain"]["ssl_enabled"] = False
-                        response_data["domain"]["ssl_warning"] = ssl_message
-                        response_data["warning"] = (
-                            f"Parent domain created but SSL setup failed: {ssl_message}. "
-                            f"You can retry with: POST /api/domains/{domain_name}/ssl"
-                        )
-
-                        deps["logger"].warning(
-                            f"Parent domain {domain_name} created but SSL failed: {ssl_message}"
-                        )
-
-                except Exception as ssl_error:
-                    deps["logger"].error(
-                        f"SSL setup exception for {domain_name}: {ssl_error}"
-                    )
-                    response_data["domain"]["ssl_enabled"] = False
-                    response_data["warning"] = (
-                        f"Parent domain created but SSL setup failed: {str(ssl_error)}. "
-                        f"You can retry with: POST /api/domains/{domain_name}/ssl"
-                    )
-
-            return APIResponse.success(response_data)
 
         except Exception as e:
             deps["logger"].error(f"Failed to create parent domain: {e}")
@@ -1495,6 +1531,7 @@ def register_domain_routes(app, deps):
             if not data:
                 return APIResponse.bad_request("Request body required")
 
+            # Simple domain checking
             if data.get("domain"):
                 domain_name = data["domain"].lower().strip()
             elif data.get("subdomain") and data.get("parent_domain"):
@@ -1506,6 +1543,7 @@ def register_domain_routes(app, deps):
                     "Either 'domain' or 'subdomain'+'parent_domain' required"
                 )
 
+            # Use comprehensive availability checking (nginx + database)
             availability_results = _check_domain_comprehensive(deps, domain_name)
 
             is_available = all(
@@ -1516,6 +1554,7 @@ def register_domain_routes(app, deps):
                 ]
             )
 
+            # Build response
             response_data = {
                 "domain": domain_name,
                 "available": is_available,
@@ -1523,6 +1562,7 @@ def register_domain_routes(app, deps):
                 "checks": availability_results,
             }
 
+            # Add conflict details
             conflicts = []
             for check_name, check_result in availability_results.items():
                 if not check_result["available"]:
@@ -1585,192 +1625,6 @@ def register_domain_routes(app, deps):
             return APIResponse.server_error(f"Validation failed: {str(e)}")
 
     # ===============================================================================
-    # SUBDOMAIN MANAGEMENT (CRUD) - CONTINUES IN NEXT PART DUE TO LENGTH
-    # ===============================================================================
-    # [Continue with remaining routes...]
-
-    # ===============================================================================
-    # SSL MANAGEMENT
-    # ===============================================================================
-
-    @app.route("/api/domains/<domain_name>/ssl", methods=["POST"])
-    @handle_api_errors(deps["logger"])
-    def setup_domain_ssl(domain_name):
-        """Setup SSL certificate for a domain using Let's Encrypt"""
-        try:
-            data = request.json or {}
-            email = data.get("email")
-
-            if not email:
-                return APIResponse.bad_request(
-                    "Email address required for SSL certificate"
-                )
-
-            conn = deps["hosting_manager"].get_database_connection()
-            if not conn:
-                return APIResponse.server_error("Database connection failed")
-
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT status FROM domains WHERE domain_name = ?", (domain_name,)
-            )
-            row = cursor.fetchone()
-            conn.close()
-
-            if not row:
-                return APIResponse.not_found(f"Domain {domain_name} not found")
-            if row[0] != "active":
-                return APIResponse.bad_request(
-                    f"Domain must be active (current status: {row[0]})"
-                )
-
-            # Use SSL Manager
-            success, message, cert_info = ssl_manager.setup_certificate(
-                domain_name, email
-            )
-
-            if not success:
-                return APIResponse.server_error(message)
-
-            try:
-                conn = deps["hosting_manager"].get_database_connection()
-                if conn:
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE domains SET ssl_enabled = 1, updated_at = CURRENT_TIMESTAMP WHERE domain_name = ?",
-                        (domain_name,),
-                    )
-                    conn.commit()
-                    conn.close()
-            except Exception as e:
-                deps["logger"].warning(f"Could not update SSL status in database: {e}")
-
-            response_data = {
-                "message": message,
-                "domain": domain_name,
-                "ssl_enabled": True,
-            }
-            if cert_info:
-                response_data.update(cert_info)
-
-            return APIResponse.success(response_data)
-
-        except Exception as e:
-            deps["logger"].error(f"SSL setup failed for {domain_name}: {e}")
-            return APIResponse.server_error(f"SSL setup failed: {str(e)}")
-
-    @app.route("/api/domains/<domain_name>/ssl", methods=["GET"])
-    @handle_api_errors(deps["logger"])
-    def get_domain_ssl_status(domain_name):
-        """Get SSL certificate status for a domain"""
-        try:
-            # Use SSL Manager
-            exists, status_info = ssl_manager.get_certificate_status(domain_name)
-
-            try:
-                conn = deps["hosting_manager"].get_database_connection()
-                if conn:
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "SELECT ssl_enabled FROM domains WHERE domain_name = ?",
-                        (domain_name,),
-                    )
-                    row = cursor.fetchone()
-                    if row:
-                        status_info["database_ssl_enabled"] = bool(row[0])
-                    conn.close()
-            except Exception as e:
-                deps["logger"].warning(f"Could not check database SSL status: {e}")
-
-            return APIResponse.success({"domain": domain_name, **status_info})
-
-        except Exception as e:
-            deps["logger"].error(f"SSL status check failed: {e}")
-            return APIResponse.server_error(f"SSL status check failed: {str(e)}")
-
-    @app.route("/api/domains/<domain_name>/ssl", methods=["DELETE"])
-    @handle_api_errors(deps["logger"])
-    def remove_domain_ssl(domain_name):
-        """Remove SSL certificate for a domain"""
-        try:
-            # Use SSL Manager
-            removed_items, errors = ssl_manager.remove_certificate(domain_name)
-            try:
-                conn = deps["hosting_manager"].get_database_connection()
-                if conn:
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE domains SET ssl_enabled = 0, updated_at = CURRENT_TIMESTAMP WHERE domain_name = ?",
-                        (domain_name,),
-                    )
-                    conn.commit()
-                    conn.close()
-            except Exception as e:
-                errors.append(f"Could not update database: {str(e)}")
-            if removed_items:
-                return APIResponse.success(
-                    {
-                        "message": f"SSL certificate removed for {domain_name}",
-                        "removed_items": removed_items,
-                        "errors": errors if errors else None,
-                        "note": "Nginx configuration may need manual update to remove SSL",
-                    }
-                )
-            else:
-                return APIResponse.not_found(
-                    f"No SSL certificate found for {domain_name}"
-                )
-
-        except Exception as e:
-            deps["logger"].error(f"SSL removal failed: {e}")
-            return APIResponse.server_error(f"SSL removal failed: {str(e)}")
-
-    @app.route("/api/domains/ssl/bulk-status", methods=["GET"])
-    @handle_api_errors(deps["logger"])
-    def get_bulk_ssl_status():
-        """Get SSL status for all domains"""
-        try:
-            all_domains = deps["hosting_manager"].list_domains()
-            domain_names = [
-                d.get("domain_name") for d in all_domains if d.get("domain_name")
-            ]
-
-            # Use SSL Manager
-            result = ssl_manager.get_bulk_status(domain_names)
-            return APIResponse.success(result)
-
-        except Exception as e:
-            deps["logger"].error(f"Bulk SSL status failed: {e}")
-            return APIResponse.server_error(f"Bulk SSL status check failed: {str(e)}")
-
-    # ===============================================================================
-    # UTILITY ROUTES
-    # ===============================================================================
-
-    @app.route("/api/domains/status", methods=["GET"])
-    @handle_api_errors(deps["logger"])
-    def get_domain_status():
-        """Get overall domain system status"""
-        try:
-            parent_domains = domain_manager.get_all_parent_domains()
-            all_subdomains = deps["hosting_manager"].list_domains()
-
-            return APIResponse.success(
-                {
-                    "parent_domains": len(parent_domains),
-                    "total_subdomains": len(all_subdomains),
-                    "active_subdomains": len(
-                        [d for d in all_subdomains if d.get("status") == "active"]
-                    ),
-                    "timestamp": datetime.now().isoformat(),
-                }
-            )
-
-        except Exception as e:
-            deps["logger"].error(f"Failed to get domain status: {e}")
-            return APIResponse.server_error("Failed to get domain status")
-
-    # ===============================================================================
     # SUBDOMAIN MANAGEMENT (CRUD)
     # ===============================================================================
 
@@ -1784,10 +1638,12 @@ def register_domain_routes(app, deps):
         try:
             all_domains = deps["hosting_manager"].list_domains()
 
+            # Filter domains
             filtered_domains = []
             for domain in all_domains:
                 domain_name = domain["domain_name"]
 
+                # Apply filters
                 if parent_domain and not (
                     domain_name == parent_domain
                     or domain_name.endswith(f".{parent_domain}")
@@ -1826,6 +1682,7 @@ def register_domain_routes(app, deps):
             if not data:
                 return APIResponse.bad_request("Request body required")
 
+            # Validate required fields
             required_fields = ["subdomain", "parent_domain", "app_name"]
             missing_fields = [field for field in required_fields if not data.get(field)]
             if missing_fields:
@@ -1842,9 +1699,11 @@ def register_domain_routes(app, deps):
                 f"Starting subdomain creation: {full_domain} for app: {app_name}"
             )
 
+            # Validate subdomain format
             if not DomainValidator._is_valid_subdomain(subdomain):
                 return APIResponse.bad_request(f"Invalid subdomain format: {subdomain}")
 
+            # Check if parent domain exists
             valid_parents = [
                 d["domain"] for d in domain_manager.get_all_parent_domains()
             ]
@@ -1853,6 +1712,7 @@ def register_domain_routes(app, deps):
                     f"Invalid parent domain. Must be one of: {', '.join(valid_parents)}"
                 )
 
+            # CRITICAL: Pre-deployment validation
             validator = PreDeploymentValidator(deps)
             is_valid, validation_results = validator.validate_domain_for_deployment(
                 full_domain
@@ -1876,6 +1736,7 @@ def register_domain_routes(app, deps):
 
             deps["logger"].info(f"Pre-deployment validation passed for {full_domain}")
 
+            # Port allocation
             port_range = domain_manager.get_port_range_for_domain(parent_domain)
             if not port_range:
                 return APIResponse.server_error(
@@ -1890,6 +1751,7 @@ def register_domain_routes(app, deps):
 
             deps["logger"].info(f"Allocated port {allocated_port} for {full_domain}")
 
+            # Create domain entry (this should now succeed since validation passed)
             success = deps["hosting_manager"].deploy_domain(
                 domain_name=full_domain,
                 port=allocated_port,
@@ -1958,6 +1820,7 @@ def register_domain_routes(app, deps):
                 "url": f"http://{row[0]}",
             }
 
+            # Add parent domain info if it's a subdomain
             if "." in subdomain_name:
                 parts = subdomain_name.split(".")
                 subdomain_info["subdomain"] = parts[0]
@@ -1980,6 +1843,7 @@ def register_domain_routes(app, deps):
             if not data:
                 return APIResponse.bad_request("Request body required")
 
+            # Get current subdomain info
             conn = deps["hosting_manager"].get_database_connection()
             if not conn:
                 return APIResponse.server_error("Database connection failed")
@@ -1995,6 +1859,7 @@ def register_domain_routes(app, deps):
                 conn.close()
                 return APIResponse.not_found(f"Subdomain {subdomain_name} not found")
 
+            # Update allowed fields
             update_fields = []
             values = []
 
@@ -2060,6 +1925,7 @@ def register_domain_routes(app, deps):
                 "removed_files": [],
             }
 
+            # 1. PM2 Process Cleanup
             try:
                 pm2_cleanup = cleanup_pm2_processes_for_domain(
                     subdomain_name, deps["logger"]
@@ -2072,6 +1938,7 @@ def register_domain_routes(app, deps):
             except Exception as e:
                 cleanup_results["errors"].append(f"PM2 cleanup error: {str(e)}")
 
+            # 2. Nginx Configuration Cleanup
             try:
                 nginx_cleanup = cleanup_nginx_config(subdomain_name, deps["logger"])
                 cleanup_results["removed_files"].extend(nginx_cleanup["removed_files"])
@@ -2082,6 +1949,7 @@ def register_domain_routes(app, deps):
             except Exception as e:
                 cleanup_results["errors"].append(f"Nginx cleanup error: {str(e)}")
 
+            # 3. Application Files Cleanup
             try:
                 files_cleanup = cleanup_application_files(
                     subdomain_name, deps["logger"]
@@ -2094,6 +1962,7 @@ def register_domain_routes(app, deps):
             except Exception as e:
                 cleanup_results["errors"].append(f"File cleanup error: {str(e)}")
 
+            # 4. Database Cleanup
             try:
                 success = deps["hosting_manager"].remove_domain(subdomain_name)
                 if success:
@@ -2101,12 +1970,14 @@ def register_domain_routes(app, deps):
                 else:
                     cleanup_results["errors"].append("Database cleanup failed")
 
+                # Remove health check monitoring
                 if hasattr(deps["health_checker"], "remove_health_check"):
                     deps["health_checker"].remove_health_check(subdomain_name)
 
             except Exception as e:
                 cleanup_results["errors"].append(f"Database cleanup error: {str(e)}")
 
+            # Generate summary
             components_count = len(cleanup_results["components_cleaned"])
             error_count = len(cleanup_results["errors"])
 
@@ -2159,6 +2030,7 @@ def register_domain_routes(app, deps):
                 if not domain_name:
                     continue
 
+                # Get process information
                 pm2_processes = []
                 try:
                     if hasattr(deps["process_monitor"], "get_all_processes"):
@@ -2241,33 +2113,23 @@ def register_domain_routes(app, deps):
                 "removed_files": [],
             }
 
+            # 1. PM2 Process Cleanup
             if "processes" in components:
                 try:
-                    # TEMPORARY: Direct PM2 cleanup instead of using broken function
-                    import subprocess
+                    pm2_cleanup = cleanup_pm2_processes_for_domain(
+                        domain_name, deps["logger"]
+                    )
+                    cleanup_results["stopped_processes"] = pm2_cleanup[
+                        "stopped_processes"
+                    ]
+                    cleanup_results["errors"].extend(pm2_cleanup["errors"])
 
-                    try:
-                        # Stop all PM2 processes matching domain name
-                        result = subprocess.run(
-                            ["pm2", "delete", domain_name],
-                            capture_output=True,
-                            text=True,
-                            timeout=30,
-                        )
-                        if result.returncode == 0:
-                            cleanup_results["components_cleaned"].append("processes")
-                            deps["logger"].info(
-                                f"✅ Stopped PM2 process: {domain_name}"
-                            )
-                        else:
-                            deps["logger"].warning(
-                                f"⚠️ No PM2 process found: {domain_name}"
-                            )
-                    except Exception as pm2_err:
-                        deps["logger"].warning(f"PM2 cleanup error: {pm2_err}")
+                    if pm2_cleanup["total_stopped"] > 0:
+                        cleanup_results["components_cleaned"].append("processes")
                 except Exception as e:
-                    cleanup_results["errors"].append(f"Process cleanup error: {str(e)}")
+                    cleanup_results["errors"].append(f"PM2 cleanup error: {str(e)}")
 
+            # 2. Nginx Configuration Cleanup
             if "nginx" in components:
                 try:
                     nginx_cleanup = cleanup_nginx_config(domain_name, deps["logger"])
@@ -2281,6 +2143,7 @@ def register_domain_routes(app, deps):
                 except Exception as e:
                     cleanup_results["errors"].append(f"Nginx cleanup error: {str(e)}")
 
+            # 3. Application Files Cleanup
             if "files" in components:
                 try:
                     files_cleanup = cleanup_application_files(
@@ -2296,34 +2159,16 @@ def register_domain_routes(app, deps):
                 except Exception as e:
                     cleanup_results["errors"].append(f"File cleanup error: {str(e)}")
 
+            # 4. Database Cleanup
             if "database" in components:
                 try:
-                    # FIXED: Directly delete from database
-                    conn = deps["hosting_manager"].get_database_connection()
-                    if conn:
-                        cursor = conn.cursor()
-                        cursor.execute(
-                            "DELETE FROM domains WHERE domain_name = ?", (domain_name,)
-                        )
-                        rows_deleted = cursor.rowcount
-                        conn.commit()
-                        conn.close()
-
-                        if rows_deleted > 0:
-                            cleanup_results["components_cleaned"].append("database")
-                            deps["logger"].info(
-                                f"✅ Deleted {domain_name} from database"
-                            )
-                        else:
-                            cleanup_results["errors"].append(
-                                f"Domain not found in database"
-                            )
+                    success = deps["hosting_manager"].remove_domain(domain_name)
+                    if success:
+                        cleanup_results["components_cleaned"].append("database")
                     else:
-                        cleanup_results["errors"].append(
-                            "Could not connect to database"
-                        )
+                        cleanup_results["errors"].append("Database cleanup failed")
 
-                    # Remove health check
+                    # Remove health check monitoring
                     try:
                         if hasattr(deps["health_checker"], "remove_health_check"):
                             deps["health_checker"].remove_health_check(domain_name)
@@ -2335,7 +2180,7 @@ def register_domain_routes(app, deps):
                         f"Database cleanup error: {str(e)}"
                     )
 
-            # Build response
+            # Generate summary
             components_count = len(cleanup_results["components_cleaned"])
             error_count = len(cleanup_results["errors"])
 
@@ -2398,6 +2243,7 @@ def register_domain_routes(app, deps):
 
             domain_config = data["domain_config"]
 
+            # Support both subdomain and root domain deployments
             if domain_config.get("subdomain") and domain_config.get("parent_domain"):
                 subdomain = domain_config["subdomain"].lower().strip()
                 parent_domain = domain_config["parent_domain"]
@@ -2420,6 +2266,7 @@ def register_domain_routes(app, deps):
                 f"Starting {deployment_type} deployment for {site_name} on {full_domain}"
             )
 
+            # CRITICAL: Pre-deployment validation using new validator
             validator = PreDeploymentValidator(deps)
             is_valid, validation_results = validator.validate_domain_for_deployment(
                 full_domain
@@ -2443,12 +2290,15 @@ def register_domain_routes(app, deps):
 
             deps["logger"].info(f"Pre-deployment validation passed for {full_domain}")
 
+            # Enhanced port allocation
             allocated_port = None
             preferred_port = deploy_config.get("port")
 
+            # Try preferred port first
             if preferred_port and is_port_available(preferred_port):
                 allocated_port = preferred_port
 
+            # Try parent domain range
             if not allocated_port:
                 port_range = domain_manager.get_port_range_for_domain(parent_domain)
                 if port_range:
@@ -2458,6 +2308,7 @@ def register_domain_routes(app, deps):
                             allocated_port = port
                             break
 
+            # Try broader range
             if not allocated_port:
                 for port in range(3001, 5000):
                     if is_port_available(port):
@@ -2467,6 +2318,7 @@ def register_domain_routes(app, deps):
             if not allocated_port:
                 return APIResponse.server_error("No available ports found")
 
+            # Update deploy config
             deploy_config.update(
                 {
                     "port": allocated_port,
@@ -2479,6 +2331,7 @@ def register_domain_routes(app, deps):
                 }
             )
 
+            # Deploy the application
             deployment_result = deps["process_monitor"].deploy_nodejs_app(
                 site_name, project_files, deploy_config
             )
@@ -2487,6 +2340,7 @@ def register_domain_routes(app, deps):
                 error_msg = deployment_result.get("error", "Unknown deployment error")
                 return APIResponse.server_error(f"App deployment failed: {error_msg}")
 
+            # Create domain entry
             success = deps["hosting_manager"].deploy_domain(
                 domain_name=full_domain,
                 port=allocated_port,
@@ -2494,6 +2348,7 @@ def register_domain_routes(app, deps):
             )
 
             if not success:
+                # Cleanup on failure
                 try:
                     if hasattr(deps["process_monitor"], "stop_process"):
                         deps["process_monitor"].stop_process(site_name)
@@ -2504,6 +2359,7 @@ def register_domain_routes(app, deps):
 
                 return APIResponse.server_error("Domain creation failed")
 
+            # Setup health monitoring
             try:
                 if hasattr(deps["health_checker"], "add_health_check"):
                     deps["health_checker"].add_health_check(
@@ -2512,6 +2368,7 @@ def register_domain_routes(app, deps):
             except Exception as e:
                 deps["logger"].warning(f"Could not setup health monitoring: {e}")
 
+            # Build final result
             final_result = {
                 **deployment_result,
                 "domain": {
@@ -2528,40 +2385,6 @@ def register_domain_routes(app, deps):
                 final_result["domain"]["subdomain"] = subdomain
                 final_result["domain"]["parent_domain"] = parent_domain
 
-            # Optional SSL setup during deployment
-            if domain_config.get("ssl_enabled") and domain_config.get("ssl_email"):
-                try:
-                    deps["logger"].info(f"Setting up SSL for {full_domain}")
-                    ssl_success, ssl_message, cert_info = ssl_manager.setup_certificate(
-                        full_domain, domain_config["ssl_email"]
-                    )
-                    if ssl_success:
-                        final_result["domain"]["ssl_enabled"] = True
-                        final_result["domain"]["ssl_certificate"] = cert_info
-                        final_result["domain"]["url"] = f"https://{full_domain}"
-
-                        try:
-                            conn = deps["hosting_manager"].get_database_connection()
-                            if conn:
-                                cursor = conn.cursor()
-                                cursor.execute(
-                                    "UPDATE domains SET ssl_enabled = 1, updated_at = CURRENT_TIMESTAMP WHERE domain_name = ?",
-                                    (full_domain,),
-                                )
-                                conn.commit()
-                                conn.close()
-                        except Exception as db_err:
-                            deps["logger"].warning(
-                                f"Could not update SSL status: {db_err}"
-                            )
-                    else:
-                        final_result["domain"]["ssl_error"] = ssl_message
-                except Exception as e:
-                    deps["logger"].warning(
-                        f"SSL setup failed but deployment succeeded: {e}"
-                    )
-                    final_result["domain"]["ssl_error"] = str(e)
-
             deps["logger"].info(
                 f"Domain deployment successful: {full_domain} on port {allocated_port}"
             )
@@ -2571,7 +2394,35 @@ def register_domain_routes(app, deps):
             deps["logger"].error(f"Domain deployment exception: {e}")
             return APIResponse.server_error(f"Domain deployment failed: {str(e)}")
 
+    # ===============================================================================
+    # UTILITY ROUTES
+    # ===============================================================================
+
+    @app.route("/api/domains/status", methods=["GET"])
+    @handle_api_errors(deps["logger"])
+    def get_domain_status():
+        """Get overall domain system status"""
+        try:
+            parent_domains = domain_manager.get_all_parent_domains()
+            all_subdomains = deps["hosting_manager"].list_domains()
+
+            return APIResponse.success(
+                {
+                    "parent_domains": len(parent_domains),
+                    "total_subdomains": len(all_subdomains),
+                    "active_subdomains": len(
+                        [d for d in all_subdomains if d.get("status") == "active"]
+                    ),
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+
+        except Exception as e:
+            deps["logger"].error(f"Failed to get domain status: {e}")
+            return APIResponse.server_error("Failed to get domain status")
+
+    # Log successful registration
     deps["logger"].info(
-        "Dynamic domain routes with SSL support registered successfully"
+        "Dynamic domain routes registered successfully with full CRUD support"
     )
     return True

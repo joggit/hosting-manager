@@ -1,0 +1,4783 @@
+==================================================
+ Complete Hosting Manager API Test Results
+    Generated: Fri Sep 26 11:03:54 AM SAST 2025
+    Enhanced with Lessons Learned Applied
+==================================================
+Test Configuration:
+  API URL:           http://75.119.141.162:5000
+  Test Domain:       test-1758877434.datablox.co.za
+  Test Subdomain:    test1758877434
+  Test App:          test-app-1758877434
+  Parent Domain:     datablox.co.za
+  Test Parent:       testparent1758877434.com
+  Output Format:     text
+==================================================
+[INFO] Results will be saved to: api_test_results_20250926_110354.txt
+
+================================================
+[SECTION] PRE-TEST ENVIRONMENT CLEANUP (LESSONS LEARNED)
+================================================
+[TEST] Step 1: Cleaning up broken nginx symlinks...
+[SUCCESS] Broken nginx symlinks cleaned
+[TEST] Step 2: Testing nginx configuration...
+[SUCCESS] Nginx configuration is valid
+[TEST] Step 3: Cleaning up old test domains...
+[TEST] Step 4: Reloading nginx...
+[SUCCESS] Environment cleanup completed - ready for reliable testing
+
+================================================
+[SECTION] SERVICE HEALTH CHECK
+================================================
+[TEST] Health check: GET /api/health
+Response Code: 200
+Duration: .863720554s
+{
+  "data": {
+    "status": "healthy",
+    "timestamp": "2025-09-26T11:04:33.102109"
+  },
+  "success": true
+}
+
+[SUCCESS] Health check successful
+[SUCCESS] API service is running
+
+================================================
+[SECTION] BASIC FUNCTIONALITY TESTS
+================================================
+[TEST] Health check: GET /api/health
+Response Code: 200
+Duration: .907402753s
+{
+  "data": {
+    "status": "healthy",
+    "timestamp": "2025-09-26T11:04:34.177119"
+  },
+  "success": true
+}
+
+[SUCCESS] Health check successful
+[TEST] Service health check: GET /api/health
+Response Code: 200
+Duration: .916922283s
+{
+  "data": {
+    "status": "healthy",
+    "timestamp": "2025-09-26T11:04:35.401073"
+  },
+  "success": true
+}
+
+[SUCCESS] Service health check successful
+[TEST] System status: GET /api/status
+Response Code: 200
+Duration: .960872201s
+{
+  "data": {
+    "api": {
+      "timestamp": "2025-09-26T11:04:36.631433",
+      "version": "3.0.0"
+    },
+    "system": {
+      "active_apps": 0,
+      "database_connected": true,
+      "database_path": "/tmp/hosting/hosting.db",
+      "domain_count": 3,
+      "nginx_running": false,
+      "readonly_filesystem": false,
+      "ssl_count": 0,
+      "web_root": "/tmp/www/domains"
+    }
+  },
+  "success": true
+}
+
+[SUCCESS] System status successful
+[TEST] List all processes: GET /api/processes
+Response Code: 200
+Duration: 2.115717713s
+{
+  "monitoring": {
+    "average_cpu": 0.0,
+    "pm2_available": true,
+    "total_memory": 849
+  },
+  "processes": [
+    {
+      "cpu": "0.3%",
+      "create_time": "2025-09-16T13:20:34.010000",
+      "cwd": null,
+      "memory": "68MB",
+      "memory_percent": 1.16,
+      "name": "mydomaincom",
+      "num_threads": 11,
+      "pid": 3204668,
+      "pm2_id": 10,
+      "port": "3005",
+      "process_manager": "pm2",
+      "restart_count": 0,
+      "status": "online",
+      "type": "unknown",
+      "uptime": 1758021634232
+    },
+    {
+      "cpu": "0.3%",
+      "create_time": "2025-09-16T18:05:49.410000",
+      "cwd": null,
+      "memory": "66MB",
+      "memory_percent": 1.12,
+      "name": "databloxcoza",
+      "num_threads": 11,
+      "pid": 3219061,
+      "pm2_id": 19,
+      "port": "3003",
+      "process_manager": "pm2",
+      "restart_count": 0,
+      "status": "online",
+      "type": "unknown",
+      "uptime": 1758038749629
+    },
+    {
+      "cpu": "0.3%",
+      "create_time": "2025-09-21T16:29:35.070000",
+      "cwd": null,
+      "memory": "66MB",
+      "memory_percent": 1.13,
+      "name": "datablox-it",
+      "num_threads": 11,
+      "pid": 3330795,
+      "pm2_id": 27,
+      "port": "3007",
+      "process_manager": "pm2",
+      "restart_count": 0,
+      "status": "online",
+      "type": "unknown",
+      "uptime": 1758464975289
+    },
+    {
+      "cpu": "0.3%",
+      "create_time": "2025-09-25T13:45:05.190000",
+      "cwd": null,
+      "memory": "195MB",
+      "memory_percent": 3.3,
+      "name": "mysite01",
+      "num_threads": 11,
+      "pid": 1184937,
+      "pm2_id": 28,
+      "port": "3004",
+      "process_manager": "pm2",
+      "restart_count": 0,
+      "status": "online",
+      "type": "unknown",
+      "uptime": 1758800705407
+    },
+    {
+      "cpu": "0.3%",
+      "create_time": "2025-09-25T19:20:12.810000",
+      "cwd": null,
+      "memory": "80MB",
+      "memory_percent": 1.35,
+      "name": "mywebsite02",
+      "num_threads": 11,
+      "pid": 2412801,
+      "pm2_id": 29,
+      "port": "3008",
+      "process_manager": "pm2",
+      "restart_count": 0,
+      "status": "online",
+      "type": "unknown",
+      "uptime": 1758820813007
+    },
+    {
+      "cpu": "0.0%",
+      "create_time": "2025-09-23T06:48:19.020000",
+      "memory": "91MB",
+      "memory_percent": 1.55,
+      "name": "admin-datablox-co-za",
+      "num_threads": 11,
+      "pid": 3355998,
+      "process_manager": "systemd",
+      "service_name": "nodejs-admin-datablox-co-za.service",
+      "status": "online",
+      "type": "nodejs"
+    },
+    {
+      "cpu": "0.0%",
+      "create_time": "2025-09-23T06:48:19.030000",
+      "memory": "96MB",
+      "memory_percent": 1.63,
+      "name": "app-datablox-co-za",
+      "num_threads": 11,
+      "pid": 3355999,
+      "process_manager": "systemd",
+      "service_name": "nodejs-app-datablox-co-za.service",
+      "status": "online",
+      "type": "nodejs"
+    },
+    {
+      "cpu": "0.0%",
+      "create_time": "2025-09-23T06:48:19.030000",
+      "memory": "98MB",
+      "memory_percent": 1.66,
+      "name": "datablox-co-za",
+      "num_threads": 11,
+      "pid": 3356000,
+      "process_manager": "systemd",
+      "service_name": "nodejs-datablox-co-za.service",
+      "status": "online",
+      "type": "nodejs"
+    },
+    {
+      "cpu": "0.0%",
+      "create_time": "2025-09-23T06:48:19.050000",
+      "memory": "88MB",
+      "memory_percent": 1.49,
+      "name": "support-datablox-co-za",
+      "num_threads": 11,
+      "pid": 3356001,
+      "process_manager": "systemd",
+      "service_name": "nodejs-support-datablox-co-za.service",
+      "status": "online",
+      "type": "nodejs"
+    }
+  ],
+  "success": true,
+  "summary": {
+    "average_cpu": 0.0,
+    "process_managers": {
+      "pm2": 5,
+      "systemd": 4
+    },
+    "running_processes": 9,
+    "stopped_processes": 0,
+    "total_memory_mb": 849,
+    "total_processes": 9
+  },
+  "timestamp": "2025-09-26T11:04:39.119409"
+}
+
+[SUCCESS] List all processes successful
+[TEST] Monitoring health status: GET /api/monitoring/health
+Response Code: 200
+Duration: .873592206s
+{
+  "health_checks": [
+    {
+      "consecutive_failures": 0,
+      "last_check": null,
+      "name": "mywebsite02",
+      "response_time": null,
+      "status": "unknown",
+      "successful_checks": 0,
+      "total_checks": 0,
+      "uptime_percentage": 100.0,
+      "url": "http://localhost:3008"
+    }
+  ],
+  "success": true,
+  "summary": {
+    "healthy_count": 0,
+    "total_checks": 1,
+    "unhealthy_count": 0
+  },
+  "timestamp": "2025-09-26T11:04:40.187529"
+}
+
+[SUCCESS] Monitoring health status successful
+[TEST] System performance metrics: GET /api/monitoring/metrics
+Response Code: 200
+Duration: 1.889748922s
+{
+  "metrics": {
+    "boot_time": "2025-08-30T16:50:56",
+    "cpu_usage": 56.7,
+    "disk_usage": {
+      "free": 361531908096,
+      "percent": 12.9,
+      "total": 414921494528,
+      "used": 53372809216
+    },
+    "load_average": [
+      2.322265625,
+      2.38427734375,
+      2.42138671875
+    ],
+    "memory_usage": {
+      "active": 1109737472,
+      "available": 4509503488,
+      "buffers": 58908672,
+      "cached": 2981920768,
+      "free": 1808474112,
+      "inactive": 209473536,
+      "percent": 27.4,
+      "shared": 1032192,
+      "slab": 2847277056,
+      "total": 6213136384,
+      "used": 1363832832
+    },
+    "process_count": 146
+  },
+  "success": true,
+  "timestamp": "2025-09-26T11:04:42.196346"
+}
+
+[SUCCESS] System performance metrics successful
+
+================================================
+[SECTION] NGINX ENDPOINT TESTS (Complete Coverage)
+================================================
+[TEST] Nginx status: GET /api/nginx/status
+Response Code: 200
+Duration: 1.871602681s
+{
+  "nginx": {
+    "config_test": {
+      "output": "nginx: the configuration file /etc/nginx/nginx.conf syntax is ok\nnginx: configuration file /etc/nginx/nginx.conf test is successful",
+      "valid": true
+    },
+    "connections": {
+      "http": 0,
+      "https": 0,
+      "total": 25
+    },
+    "error_log": [],
+    "running": false,
+    "service_status": {
+      "active": true,
+      "enabled": true,
+      "exit_code": 3
+    },
+    "uptime": null,
+    "version": "1.24.0",
+    "worker_processes": []
+  },
+  "success": true,
+  "timestamp": "2025-09-26T11:04:44.175195"
+}
+
+[SUCCESS] Nginx status successful
+[TEST] Nginx sites enabled: GET /api/nginx/sites-enabled
+Response Code: 200
+Duration: 1.244606293s
+{
+  "count": 23,
+  "enabled_sites": [
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "test"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-04T16:14:50.684566",
+      "name": "test",
+      "path": "/etc/nginx/sites-enabled/test",
+      "size": null,
+      "target": "/etc/nginx/sites-available/test"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3014;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3014"
+          }
+        ],
+        "proxy_pass": "http://localhost:3014",
+        "root_path": null,
+        "server_names": [
+          "hello-next.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-11T10:53:38.293429",
+      "name": "hello-next.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/hello-next.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/hello-next.smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3004;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3004"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3004",
+        "root_path": null,
+        "server_names": [
+          "testing2.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-08T15:44:17.797195",
+      "name": "testing2.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/testing2.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/testing2.smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3010;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3010"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/mondaycafe-co-za/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3010",
+        "root_path": null,
+        "server_names": [
+          "mondaycafe-co-za.yourdomain.com",
+          "mondaycafe-co-za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-07-14T21:58:43.976041",
+      "name": "mondaycafe-co-za",
+      "path": "/etc/nginx/sites-enabled/mondaycafe-co-za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/mondaycafe-co-za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3004;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3004"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3004",
+        "root_path": null,
+        "server_names": [
+          "testing123.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-08T15:16:47.953542",
+      "name": "testing123.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/testing123.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/testing123.smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "smartwave"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-04T12:11:02.393845",
+      "name": "smartwave",
+      "path": "/etc/nginx/sites-enabled/smartwave",
+      "size": null,
+      "target": "/etc/nginx/sites-available/smartwave"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3023;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3023"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3023",
+        "root_path": null,
+        "server_names": [
+          "api.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T16:38:35.674912",
+      "name": "api.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/api.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/api.smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3011;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3011"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3011",
+        "root_path": null,
+        "server_names": [
+          "menu.mondaycafe.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T16:38:25.536093",
+      "name": "menu.mondaycafe.co.za",
+      "path": "/etc/nginx/sites-enabled/menu.mondaycafe.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/menu.mondaycafe.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:5000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:5000"
+          }
+        ],
+        "proxy_pass": "http://localhost:5000",
+        "root_path": null,
+        "server_names": [
+          "manager.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-21T14:35:49.529011",
+      "name": "manager.datablox.co.za",
+      "path": "/etc/nginx/sites-enabled/manager.datablox.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/manager.datablox.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3021;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3021"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3021",
+        "root_path": null,
+        "server_names": [
+          "app.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T16:38:35.466916",
+      "name": "app.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/app.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/app.smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3000"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/testing/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3000",
+        "root_path": null,
+        "server_names": [
+          "testing.yourdomain.com",
+          "testing"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T15:59:41.926787",
+      "name": "testing",
+      "path": "/etc/nginx/sites-enabled/testing",
+      "size": null,
+      "target": "/etc/nginx/sites-available/testing"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "test-deployment"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-05T09:51:22.055612",
+      "name": "test-deployment",
+      "path": "/etc/nginx/sites-enabled/test-deployment",
+      "size": null,
+      "target": "/etc/nginx/sites-available/test-deployment"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "try_files $uri $uri/ =404;\n        expires 1h;\n        add_header Cache-Control \"public, no-transform\";",
+            "path": "/",
+            "try_files": "$uri $uri/ =404"
+          },
+          {
+            "content": "expires 1y;\n        add_header Cache-Control \"public, immutable\";\n        add_header Vary Accept-Encoding;",
+            "path": "~* \\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp|avif)$"
+          },
+          {
+            "content": "gzip on;\n        gzip_vary on;\n        gzip_min_length 1024;\n        gzip_comp_level 6;\n        gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;",
+            "path": "~* \\.(css|js|html|xml|txt|json)$"
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~* \\.(bak|backup|old|tmp)$"
+          }
+        ],
+        "proxy_pass": null,
+        "root_path": "/var/www/domains/yourdomain.com/public",
+        "server_names": [
+          "yourdomain.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-28T13:44:25.634594",
+      "name": "yourdomain.com",
+      "path": "/etc/nginx/sites-enabled/yourdomain.com",
+      "size": null,
+      "target": "/etc/nginx/sites-available/yourdomain.com"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "lgcar"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-05T11:30:03.982676",
+      "name": "lgcar",
+      "path": "/etc/nginx/sites-enabled/lgcar",
+      "size": null,
+      "target": "/etc/nginx/sites-available/lgcar"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80",
+          "443 ssl http2"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3004;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3004"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3004",
+        "root_path": null,
+        "server_names": [
+          "lgcar2.smartwave.co.za",
+          "lgcar2.smartwave.co.za"
+        ],
+        "ssl_certificate": "/etc/letsencrypt/live/lgcar2.smartwave.co.za/fullchain.pem",
+        "ssl_certificate_key": "/etc/letsencrypt/live/lgcar2.smartwave.co.za/privkey.pem"
+      },
+      "is_symlink": true,
+      "modified": "2025-09-08T11:22:55.470832",
+      "name": "lgcar2.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/lgcar2.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/lgcar2.smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3001;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3001"
+          }
+        ],
+        "proxy_pass": "http://localhost:3001",
+        "root_path": null,
+        "server_names": [
+          "test-deploy"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-04T13:34:40.670671",
+      "name": "test-deploy",
+      "path": "/etc/nginx/sites-enabled/test-deploy",
+      "size": null,
+      "target": "/etc/nginx/sites-available/test-deploy"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "mydomain.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-16T13:20:43.554545",
+      "name": "mydomain.com",
+      "path": "/etc/nginx/sites-enabled/mydomain.com",
+      "size": null,
+      "target": "/etc/nginx/sites-available/mydomain.com"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3000"
+          }
+        ],
+        "proxy_pass": "http://localhost:3000",
+        "root_path": null,
+        "server_names": [
+          "smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-09T14:51:52.450319",
+      "name": "smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/smartwave.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "blues"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-09-05T11:54:18.459338",
+      "name": "blues",
+      "path": "/etc/nginx/sites-enabled/blues",
+      "size": null,
+      "target": "/etc/nginx/sites-available/blues"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "try_files $uri $uri/ =404;\n        expires 1h;\n        add_header Cache-Control \"public, no-transform\";",
+            "path": "/",
+            "try_files": "$uri $uri/ =404"
+          },
+          {
+            "content": "expires 1y;\n        add_header Cache-Control \"public, immutable\";\n        add_header Vary Accept-Encoding;",
+            "path": "~* \\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp|avif)$"
+          },
+          {
+            "content": "gzip on;\n        gzip_vary on;\n        gzip_min_length 1024;\n        gzip_comp_level 6;\n        gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;",
+            "path": "~* \\.(css|js|html|xml|txt|json)$"
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~* \\.(bak|backup|old|tmp)$"
+          }
+        ],
+        "proxy_pass": null,
+        "root_path": "/tmp/www/domains/test.com/public",
+        "server_names": [
+          "test.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-08-28T20:49:05.022861",
+      "name": "test.com",
+      "path": "/etc/nginx/sites-enabled/test.com",
+      "size": null,
+      "target": "/etc/nginx/sites-available/test.com"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3012;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3012"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3012",
+        "root_path": null,
+        "server_names": [
+          "order.mondaycafe.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T16:38:25.632091",
+      "name": "order.mondaycafe.co.za",
+      "path": "/etc/nginx/sites-enabled/order.mondaycafe.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/order.mondaycafe.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3013;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3013"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3013",
+        "root_path": null,
+        "server_names": [
+          "admin.mondaycafe.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T16:38:25.733089",
+      "name": "admin.mondaycafe.co.za",
+      "path": "/etc/nginx/sites-enabled/admin.mondaycafe.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/admin.mondaycafe.co.za"
+    },
+    {
+      "config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3022;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3022"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3022",
+        "root_path": null,
+        "server_names": [
+          "dashboard.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "is_symlink": true,
+      "modified": "2025-06-29T16:38:35.574914",
+      "name": "dashboard.smartwave.co.za",
+      "path": "/etc/nginx/sites-enabled/dashboard.smartwave.co.za",
+      "size": null,
+      "target": "/etc/nginx/sites-available/dashboard.smartwave.co.za"
+    }
+  ],
+  "success": true,
+  "timestamp": "2025-09-26T11:04:45.227895"
+}
+
+[SUCCESS] Nginx sites enabled successful
+[TEST] Comprehensive sites info: GET /api/sites
+Response Code: 200
+Duration: 2.133408813s
+{
+  "server_info": {
+    "fqdn": "vmi2186378.contaboserver.net",
+    "hostname": "vmi2186378",
+    "ip_addresses": [
+      {
+        "interface": "lo",
+        "ip": "127.0.0.1",
+        "netmask": "255.0.0.0"
+      },
+      {
+        "interface": "eth0",
+        "ip": "75.119.141.162",
+        "netmask": "255.255.224.0"
+      }
+    ],
+    "load_average": [
+      2.376953125,
+      2.39453125,
+      2.4248046875
+    ],
+    "nginx_version": "1.24.0",
+    "uptime": {
+      "boot_time": "2025-08-30T16:50:56",
+      "uptime_human": "26 days, 18:13:51.512759",
+      "uptime_seconds": 2312031.512759
+    }
+  },
+  "sites": [
+    {
+      "config_path": "/etc/nginx/sites-available/datablox.smartwave.co.za",
+      "domain_name": "datablox.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80",
+          "443 ssl http2"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "datablox.smartwave.co.za",
+          "datablox.smartwave.co.za"
+        ],
+        "ssl_certificate": "/etc/letsencrypt/live/datablox.smartwave.co.za/fullchain.pem",
+        "ssl_certificate_key": "/etc/letsencrypt/live/datablox.smartwave.co.za/privkey.pem"
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/mondaycafe-co-za",
+      "domain_name": "mondaycafe-co-za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3010;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3010"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/mondaycafe-co-za/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3010",
+        "root_path": null,
+        "server_names": [
+          "mondaycafe-co-za.yourdomain.com",
+          "mondaycafe-co-za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/testing123.smartwave.co.za",
+      "domain_name": "testing123.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3004;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3004"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3004",
+        "root_path": null,
+        "server_names": [
+          "testing123.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/app-datablox-co-za",
+      "domain_name": "app-datablox-co-za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3001;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3001"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/app-datablox-co-za/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3001",
+        "root_path": null,
+        "server_names": [
+          "app-datablox-co-za.yourdomain.com",
+          "app-datablox-co-za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/smartwave",
+      "domain_name": "smartwave",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "smartwave"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/datablox2.smartwave.co.za",
+      "domain_name": "datablox2.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "datablox2.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/hello-next.smartwave.co.za",
+      "domain_name": "hello-next.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3014;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3014"
+          }
+        ],
+        "proxy_pass": "http://localhost:3014",
+        "root_path": null,
+        "server_names": [
+          "hello-next.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/yourdomain.com",
+      "domain_name": "yourdomain.com",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "try_files $uri $uri/ =404;\n        expires 1h;\n        add_header Cache-Control \"public, no-transform\";",
+            "path": "/",
+            "try_files": "$uri $uri/ =404"
+          },
+          {
+            "content": "expires 1y;\n        add_header Cache-Control \"public, immutable\";\n        add_header Vary Accept-Encoding;",
+            "path": "~* \\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp|avif)$"
+          },
+          {
+            "content": "gzip on;\n        gzip_vary on;\n        gzip_min_length 1024;\n        gzip_comp_level 6;\n        gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;",
+            "path": "~* \\.(css|js|html|xml|txt|json)$"
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~* \\.(bak|backup|old|tmp)$"
+          }
+        ],
+        "proxy_pass": null,
+        "root_path": "/var/www/domains/yourdomain.com/public",
+        "server_names": [
+          "yourdomain.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/testing2.smartwave.co.za",
+      "domain_name": "testing2.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3004;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3004"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3004",
+        "root_path": null,
+        "server_names": [
+          "testing2.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "connectivity": {
+        "error": "HTTPConnectionPool(host='localhost', port=3017): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7593e920fc50>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+        "responding": false,
+        "response_time": null,
+        "status_code": null
+      },
+      "created_at": "2025-09-15 15:47:50",
+      "database_status": "removed",
+      "domain_name": "working123.datablox.co.za",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3017,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/smartwave.co.za",
+      "connectivity": {
+        "error": null,
+        "responding": true,
+        "response_time": 0.042178,
+        "status_code": 200
+      },
+      "created_at": "2025-09-09 12:51:52",
+      "database_status": "active",
+      "domain_name": "smartwave.co.za",
+      "in_database": true,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3000"
+          }
+        ],
+        "proxy_pass": "http://localhost:3000",
+        "root_path": null,
+        "server_names": [
+          "smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "port": 3000,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "active"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/test.com",
+      "domain_name": "test.com",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "try_files $uri $uri/ =404;\n        expires 1h;\n        add_header Cache-Control \"public, no-transform\";",
+            "path": "/",
+            "try_files": "$uri $uri/ =404"
+          },
+          {
+            "content": "expires 1y;\n        add_header Cache-Control \"public, immutable\";\n        add_header Vary Accept-Encoding;",
+            "path": "~* \\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp|avif)$"
+          },
+          {
+            "content": "gzip on;\n        gzip_vary on;\n        gzip_min_length 1024;\n        gzip_comp_level 6;\n        gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;",
+            "path": "~* \\.(css|js|html|xml|txt|json)$"
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;\n        access_log off;\n        log_not_found off;",
+            "path": "~* \\.(bak|backup|old|tmp)$"
+          }
+        ],
+        "proxy_pass": null,
+        "root_path": "/tmp/www/domains/test.com/public",
+        "server_names": [
+          "test.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/app.datablox.co.za",
+      "domain_name": "app.datablox.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3001;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3001"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3001",
+        "root_path": null,
+        "server_names": [
+          "app.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/order.mondaycafe.co.za",
+      "domain_name": "order.mondaycafe.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3012;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3012"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3012",
+        "root_path": null,
+        "server_names": [
+          "order.mondaycafe.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/support-datablox-co-za",
+      "domain_name": "support-datablox-co-za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3006;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3006"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/support-datablox-co-za/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3006",
+        "root_path": null,
+        "server_names": [
+          "support-datablox-co-za.yourdomain.com",
+          "support-datablox-co-za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/default",
+      "domain_name": "default",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80 default_server",
+          "[::]:80 default_server",
+          "443 ssl default_server",
+          "[::]:443 ssl default_server",
+          "80",
+          "[::]:80"
+        ],
+        "locations": [
+          {
+            "content": "# First attempt to serve request as file, then\n\t\t# as directory, then fall back to displaying a 404.\n\t\ttry_files $uri $uri/ =404;",
+            "path": "/",
+            "try_files": "$uri $uri/ =404"
+          },
+          {
+            "content": "#\tinclude snippets/fastcgi-php.conf;\n\t#\n\t#\t# With php-fpm (or other unix sockets):\n\t#\tfastcgi_pass unix:/run/php/php7.4-fpm.sock;\n\t#\t# With php-cgi (or other tcp sockets):\n\t#\tfastcgi_pass 127.0.0.1:9000;\n\t#",
+            "path": "~ \\.php$"
+          },
+          {
+            "content": "#\tdeny all;\n\t#",
+            "path": "~ /\\.ht"
+          },
+          {
+            "content": "#\t\ttry_files $uri $uri/ =404;\n#",
+            "path": "/",
+            "try_files": "$uri $uri/ =404"
+          }
+        ],
+        "proxy_pass": null,
+        "root_path": "/var/www/html",
+        "server_names": [
+          "_",
+          "example.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/test-deployment",
+      "domain_name": "test-deployment",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "test-deployment"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/datablox",
+      "domain_name": "datablox",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "datablox"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/admin-datablox-co-za",
+      "domain_name": "admin-datablox-co-za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3002;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3002"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/admin-datablox-co-za/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3002",
+        "root_path": null,
+        "server_names": [
+          "admin-datablox-co-za.yourdomain.com",
+          "admin-datablox-co-za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/fresh1757767778.datablox.co.za",
+      "domain_name": "fresh1757767778.datablox.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3000"
+          }
+        ],
+        "proxy_pass": "http://localhost:3000",
+        "root_path": null,
+        "server_names": [
+          "fresh1757767778.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "connectivity": {
+        "error": "HTTPConnectionPool(host='localhost', port=3118): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7593e9215280>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+        "responding": false,
+        "response_time": null,
+        "status_code": null
+      },
+      "created_at": "2025-09-13 14:11:24",
+      "database_status": "removed",
+      "domain_name": "working-test.datablox.co.za",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3118,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "connectivity": {
+        "error": null,
+        "responding": true,
+        "response_time": 0.280328,
+        "status_code": 500
+      },
+      "created_at": "2025-09-08 13:52:28",
+      "database_status": "removed",
+      "domain_name": "testing3.smartwave.co.za",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3004,
+      "site_type": "static",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/api.datablox.co.za",
+      "domain_name": "api.datablox.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "api.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/lgcar",
+      "domain_name": "lgcar",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "lgcar"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/dashboard.smartwave.co.za",
+      "domain_name": "dashboard.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3022;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3022"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3022",
+        "root_path": null,
+        "server_names": [
+          "dashboard.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/api.smartwave.co.za",
+      "domain_name": "api.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3023;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3023"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3023",
+        "root_path": null,
+        "server_names": [
+          "api.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/menu.mondaycafe.co.za",
+      "domain_name": "menu.mondaycafe.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3011;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3011"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3011",
+        "root_path": null,
+        "server_names": [
+          "menu.mondaycafe.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/manager.datablox.co.za",
+      "connectivity": {
+        "error": null,
+        "responding": true,
+        "response_time": 0.010125,
+        "status_code": 200
+      },
+      "created_at": "2025-09-21 12:36:28",
+      "database_status": "active",
+      "domain_name": "manager.datablox.co.za",
+      "in_database": true,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:5000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:5000"
+          }
+        ],
+        "proxy_pass": "http://localhost:5000",
+        "root_path": null,
+        "server_names": [
+          "manager.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "port": 5000,
+      "site_type": "api",
+      "ssl_enabled": false,
+      "status": "active"
+    },
+    {
+      "connectivity": {
+        "error": "HTTPConnectionPool(host='localhost', port=3110): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7593e9214320>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+        "responding": false,
+        "response_time": null,
+        "status_code": null
+      },
+      "created_at": "2025-09-12 07:28:54",
+      "database_status": "removed",
+      "domain_name": "nextjs-test.datablox.co.za",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3110,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/lgcar2.smartwave.co.za",
+      "domain_name": "lgcar2.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80",
+          "443 ssl http2"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3004;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        \n        # Timeouts\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        proxy_read_timeout 60s;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3004"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /\\."
+          },
+          {
+            "content": "deny all;",
+            "path": "~ /(package\\.json|package-lock\\.json|next\\.config\\.(js|mjs)|ecosystem\\.config\\.json)$"
+          }
+        ],
+        "proxy_pass": "http://localhost:3004",
+        "root_path": null,
+        "server_names": [
+          "lgcar2.smartwave.co.za",
+          "lgcar2.smartwave.co.za"
+        ],
+        "ssl_certificate": "/etc/letsencrypt/live/lgcar2.smartwave.co.za/fullchain.pem",
+        "ssl_certificate_key": "/etc/letsencrypt/live/lgcar2.smartwave.co.za/privkey.pem"
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/test",
+      "domain_name": "test",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3003;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3003"
+          }
+        ],
+        "proxy_pass": "http://localhost:3003",
+        "root_path": null,
+        "server_names": [
+          "test"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/mydomain.com",
+      "domain_name": "mydomain.com",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "mydomain.com"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/test-deploy",
+      "domain_name": "test-deploy",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3001;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3001"
+          }
+        ],
+        "proxy_pass": "http://localhost:3001",
+        "root_path": null,
+        "server_names": [
+          "test-deploy"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/blues",
+      "domain_name": "blues",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3005;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3005"
+          }
+        ],
+        "proxy_pass": "http://localhost:3005",
+        "root_path": null,
+        "server_names": [
+          "blues"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/app.smartwave.co.za",
+      "domain_name": "app.smartwave.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3021;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3021"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3021",
+        "root_path": null,
+        "server_names": [
+          "app.smartwave.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "connectivity": {
+        "error": null,
+        "responding": true,
+        "response_time": 0.011689,
+        "status_code": 200
+      },
+      "created_at": "2025-09-12 09:10:24",
+      "database_status": "removed",
+      "domain_name": "datablox.co.za",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3000,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "connectivity": {
+        "error": null,
+        "responding": true,
+        "response_time": 0.049287,
+        "status_code": 200
+      },
+      "created_at": "2025-09-04 11:34:41",
+      "database_status": "removed",
+      "domain_name": "test.example.com",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3001,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "connectivity": {
+        "error": null,
+        "responding": true,
+        "response_time": 0.03311,
+        "status_code": 200
+      },
+      "created_at": "2025-09-09 13:03:22",
+      "database_status": "active",
+      "domain_name": "testapp.smartwave.co.za",
+      "in_database": true,
+      "in_nginx": false,
+      "port": 3005,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "database_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/testing",
+      "domain_name": "testing",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3000"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          },
+          {
+            "content": "alias /tmp/www/domains/testing/static/;\n        expires 1y;\n        add_header Cache-Control \"public, immutable\";",
+            "path": "/static/"
+          }
+        ],
+        "proxy_pass": "http://localhost:3000",
+        "root_path": null,
+        "server_names": [
+          "testing.yourdomain.com",
+          "testing"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/validated-test.datablox.co.za",
+      "domain_name": "validated-test.datablox.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3118;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3118"
+          }
+        ],
+        "proxy_pass": "http://localhost:3118",
+        "root_path": null,
+        "server_names": [
+          "validated-test.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/admin.mondaycafe.co.za",
+      "domain_name": "admin.mondaycafe.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": true,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3013;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3013"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3013",
+        "root_path": null,
+        "server_names": [
+          "admin.mondaycafe.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    },
+    {
+      "config_path": "/etc/nginx/sites-available/admin.datablox.co.za",
+      "domain_name": "admin.datablox.co.za",
+      "in_database": false,
+      "in_nginx": true,
+      "is_enabled": false,
+      "nginx_config": {
+        "listen_ports": [
+          "80"
+        ],
+        "locations": [
+          {
+            "content": "proxy_pass http://localhost:3002;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade $http_upgrade;\n        proxy_set_header Connection 'upgrade';\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n        proxy_cache_bypass $http_upgrade;\n        proxy_read_timeout 86400;\n        proxy_connect_timeout 60s;\n        proxy_send_timeout 60s;\n        \n        # Buffer settings for better performance\n        proxy_buffering on;\n        proxy_buffer_size 8k;\n        proxy_buffers 8 8k;",
+            "path": "/",
+            "proxy_pass": "http://localhost:3002"
+          },
+          {
+            "content": "access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;",
+            "path": "/health"
+          }
+        ],
+        "proxy_pass": "http://localhost:3002",
+        "root_path": null,
+        "server_names": [
+          "admin.datablox.co.za"
+        ],
+        "ssl_certificate": null,
+        "ssl_certificate_key": null
+      },
+      "status": "nginx_only"
+    }
+  ],
+  "success": true,
+  "summary": {
+    "active_sites": 2,
+    "dynamic_sites": 41,
+    "ssl_enabled_sites": 0,
+    "static_sites": 1,
+    "total_sites": 42
+  },
+  "timestamp": "2025-09-26T11:04:47.506590"
+}
+
+[SUCCESS] Comprehensive sites info successful
+[TEST] Site details (existing domain): GET /api/sites/datablox.co.za/details
+Response Code: 200
+Duration: .907722644s
+{
+  "site": {
+    "connectivity": {
+      "error": null,
+      "responding": true,
+      "response_time": 0.012681,
+      "status_code": 200
+    },
+    "database": {
+      "created_at": "2025-09-12 09:10:24",
+      "domain_name": "datablox.co.za",
+      "port": 3000,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "removed",
+      "updated_at": "2025-09-21 14:28:43"
+    },
+    "domain_name": "datablox.co.za",
+    "files": {
+      "exists": false
+    },
+    "nginx": null,
+    "ssl": {
+      "certificate_exists": false,
+      "certificate_path": null,
+      "expiry_date": null,
+      "key_path": null
+    }
+  },
+  "success": true,
+  "timestamp": "2025-09-26T11:04:49.302001"
+}
+
+[SUCCESS] Site details (existing domain) successful
+[TEST] Site details (non-existent domain): GET /api/sites/nonexistent-1758877434.datablox.co.za/details
+Response Code: 404
+Duration: .868220632s
+{
+  "error": "Site not found",
+  "success": false
+}
+
+[SUCCESS] Site details (non-existent domain) successful
+[TEST] Site nginx config (existing): GET /api/sites/datablox.co.za/nginx-config
+Response Code: 404
+Duration: .859095626s
+{
+  "error": "Nginx config not found",
+  "success": false
+}
+
+[ERROR] Site nginx config (existing) failed (expected 200, got 404)
+[TEST] Site nginx config (non-existent): GET /api/sites/nonexistent-1758877434.datablox.co.za/nginx-config
+Response Code: 404
+Duration: .895349237s
+{
+  "error": "Nginx config not found",
+  "success": false
+}
+
+[SUCCESS] Site nginx config (non-existent) successful
+[TEST] Sites connectivity test: GET /api/sites/connectivity
+Response Code: 200
+Duration: 1.019567726s
+{
+  "connectivity_tests": [
+    {
+      "domain_name": "working123.datablox.co.za",
+      "error": "HTTPConnectionPool(host='localhost', port=3017): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7593e9216870>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+      "port": 3017,
+      "responding": false,
+      "response_time": null,
+      "status_code": null
+    },
+    {
+      "domain_name": "smartwave.co.za",
+      "error": null,
+      "port": 3000,
+      "responding": true,
+      "response_time": 0.007252,
+      "status_code": 200
+    },
+    {
+      "domain_name": "working-test.datablox.co.za",
+      "error": "HTTPConnectionPool(host='localhost', port=3118): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7593e80361e0>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+      "port": 3118,
+      "responding": false,
+      "response_time": null,
+      "status_code": null
+    },
+    {
+      "domain_name": "testing3.smartwave.co.za",
+      "error": null,
+      "port": 3004,
+      "responding": true,
+      "response_time": 0.0056,
+      "status_code": 500
+    },
+    {
+      "domain_name": "manager.datablox.co.za",
+      "error": null,
+      "port": 5000,
+      "responding": true,
+      "response_time": 0.005941,
+      "status_code": 200
+    },
+    {
+      "domain_name": "nextjs-test.datablox.co.za",
+      "error": "HTTPConnectionPool(host='localhost', port=3110): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7593e92153d0>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+      "port": 3110,
+      "responding": false,
+      "response_time": null,
+      "status_code": null
+    },
+    {
+      "domain_name": "datablox.co.za",
+      "error": null,
+      "port": 3000,
+      "responding": true,
+      "response_time": 0.008601,
+      "status_code": 200
+    },
+    {
+      "domain_name": "test.example.com",
+      "error": null,
+      "port": 3001,
+      "responding": true,
+      "response_time": 0.022056,
+      "status_code": 200
+    },
+    {
+      "domain_name": "testapp.smartwave.co.za",
+      "error": null,
+      "port": 3005,
+      "responding": true,
+      "response_time": 0.008345,
+      "status_code": 200
+    }
+  ],
+  "success": true,
+  "summary": {
+    "not_responding": 3,
+    "responding": 6,
+    "total_tested": 9
+  },
+  "timestamp": "2025-09-26T11:04:53.599785"
+}
+
+[SUCCESS] Sites connectivity test successful
+[TEST] Server network info: GET /api/server/network-info
+Response Code: 200
+Duration: .983137617s
+{
+  "network": {
+    "connections": [
+      {
+        "local_address": "::ffff:75.119.141.162:22",
+        "pid": 932050,
+        "remote_address": "::ffff:106.13.181.42:56196",
+        "status": "ESTABLISHED"
+      },
+      {
+        "local_address": "::ffff:75.119.141.162:22",
+        "pid": 933925,
+        "remote_address": "::ffff:212.25.35.66:34864",
+        "status": "ESTABLISHED"
+      },
+      {
+        "local_address": "::ffff:75.119.141.162:22",
+        "pid": 933898,
+        "remote_address": "::ffff:103.96.146.185:58052",
+        "status": "ESTABLISHED"
+      },
+      {
+        "local_address": "75.119.141.162:5000",
+        "pid": 2403397,
+        "remote_address": "138.199.50.101:54910",
+        "status": "ESTABLISHED"
+      },
+      {
+        "local_address": "::ffff:75.119.141.162:22",
+        "pid": 932651,
+        "remote_address": "::ffff:59.36.219.241:46926",
+        "status": "ESTABLISHED"
+      },
+      {
+        "local_address": "::ffff:75.119.141.162:22",
+        "pid": 933807,
+        "remote_address": "::ffff:180.76.202.69:45664",
+        "status": "ESTABLISHED"
+      }
+    ],
+    "dns_info": {
+      "dns_working": true,
+      "resolv_conf": "# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).\n# Do not edit.\n#\n# This file might be symlinked as /etc/resolv.conf. If you're looking at\n# /etc/resolv.conf and seeing this text, you have followed the symlink.\n#\n# This is a dynamic resolv.conf file for connecting local clients to the\n# internal DNS stub resolver of systemd-resolved. This file lists all\n# configured search domains.\n#\n# Run \"resolvectl status\" to see details about the uplink DNS servers\n# currently in use.\n#\n# Third party programs should typically not access this file directly, but only\n# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a\n# different way, replace this symlink by a static file or a different symlink.\n#\n# See man:systemd-resolved.service(8) for details about the supported modes of\n# operation for /etc/resolv.conf.\n\nnameserver 127.0.0.53\noptions edns0 trust-ad\nsearch .",
+      "test_resolution": "142.250.184.206"
+    },
+    "interfaces": [
+      {
+        "addresses": [
+          {
+            "address": "127.0.0.1",
+            "broadcast": null,
+            "family": "2",
+            "netmask": "255.0.0.0"
+          },
+          {
+            "address": "::1",
+            "broadcast": null,
+            "family": "10",
+            "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+          },
+          {
+            "address": "00:00:00:00:00:00",
+            "broadcast": null,
+            "family": "17",
+            "netmask": null
+          }
+        ],
+        "name": "lo"
+      },
+      {
+        "addresses": [
+          {
+            "address": "75.119.141.162",
+            "broadcast": "75.119.159.255",
+            "family": "2",
+            "netmask": "255.255.224.0"
+          },
+          {
+            "address": "2a02:c206:2218:6378::1",
+            "broadcast": null,
+            "family": "10",
+            "netmask": "ffff:ffff:ffff:ffff::"
+          },
+          {
+            "address": "fe80::250:56ff:fe55:72c7%eth0",
+            "broadcast": null,
+            "family": "10",
+            "netmask": "ffff:ffff:ffff:ffff::"
+          },
+          {
+            "address": "00:50:56:55:72:c7",
+            "broadcast": "ff:ff:ff:ff:ff:ff",
+            "family": "17",
+            "netmask": null
+          }
+        ],
+        "name": "eth0"
+      }
+    ],
+    "listening_ports": [
+      {
+        "address": "::",
+        "pid": 3204680,
+        "port": 3005
+      },
+      {
+        "address": "0.0.0.0",
+        "pid": 2403397,
+        "port": 5000
+      },
+      {
+        "address": "::",
+        "pid": 3355999,
+        "port": 3001
+      },
+      {
+        "address": "127.0.0.54",
+        "pid": 3357327,
+        "port": 53
+      },
+      {
+        "address": "::",
+        "pid": 3219073,
+        "port": 3003
+      },
+      {
+        "address": "::",
+        "pid": 1184960,
+        "port": 3004
+      },
+      {
+        "address": "127.0.0.53",
+        "pid": 3357327,
+        "port": 53
+      },
+      {
+        "address": "::",
+        "pid": 3357311,
+        "port": 22
+      },
+      {
+        "address": "::",
+        "pid": 3355998,
+        "port": 3002
+      },
+      {
+        "address": "::",
+        "pid": 3356001,
+        "port": 3006
+      },
+      {
+        "address": "::",
+        "pid": 3356000,
+        "port": 3000
+      },
+      {
+        "address": "::",
+        "pid": 3330807,
+        "port": 3007
+      },
+      {
+        "address": "::",
+        "pid": 2412857,
+        "port": 3008
+      }
+    ],
+    "nginx_processes": []
+  },
+  "success": true,
+  "timestamp": "2025-09-26T11:04:54.820382"
+}
+
+[SUCCESS] Server network info successful
+[TEST] Nginx domain check: POST /api/nginx/check-domain
+Response Code: 200
+Duration: .872204861s
+{
+  "details": {
+    "nginx_available": {
+      "available": true,
+      "details": {},
+      "directory": "/etc/nginx/sites-available",
+      "message": ""
+    },
+    "nginx_enabled": {
+      "available": true,
+      "details": {},
+      "directory": "/etc/nginx/sites-enabled",
+      "message": ""
+    }
+  },
+  "domain": "test-nginx-check-1758877434.datablox.co.za",
+  "exists_in_nginx": false,
+  "locations": [],
+  "success": true,
+  "timestamp": "2025-09-26T11:04:55.879999"
+}
+
+[SUCCESS] Nginx domain check successful
+
+================================================
+[SECTION] PARENT DOMAIN MANAGEMENT TESTS (CRUD)
+================================================
+[TEST] Get all parent domains: GET /api/domains
+Response Code: 200
+Duration: .871464701s
+{
+  "domains": [
+    {
+      "available_ports": 99,
+      "created_at": "2025-09-15 14:07:46",
+      "current_subdomains": 1,
+      "description": "DataBlox domain",
+      "domain": "datablox.co.za",
+      "example_subdomain": "myapp.datablox.co.za",
+      "id": "datablox.co.za",
+      "name": "datablox.co.za",
+      "port_range": [
+        3001,
+        3100
+      ],
+      "port_range_end": 3100,
+      "port_range_start": 3001,
+      "ssl_enabled": true,
+      "status": "active"
+    },
+    {
+      "available_ports": 200,
+      "created_at": "2025-09-15 16:31:46",
+      "current_subdomains": 0,
+      "description": "Updated test parent domain description",
+      "domain": "testparent1757953855.com",
+      "example_subdomain": "myapp.testparent1757953855.com",
+      "id": "testparent1757953855.com",
+      "name": "testparent1757953855.com",
+      "port_range": [
+        4001,
+        4200
+      ],
+      "port_range_end": 4200,
+      "port_range_start": 4001,
+      "ssl_enabled": true,
+      "status": "active"
+    },
+    {
+      "available_ports": 200,
+      "created_at": "2025-09-15 16:41:45",
+      "current_subdomains": 0,
+      "description": "Updated test parent domain description",
+      "domain": "testparent1757954455.com",
+      "example_subdomain": "myapp.testparent1757954455.com",
+      "id": "testparent1757954455.com",
+      "name": "testparent1757954455.com",
+      "port_range": [
+        4001,
+        4200
+      ],
+      "port_range_end": 4200,
+      "port_range_start": 4001,
+      "ssl_enabled": true,
+      "status": "active"
+    },
+    {
+      "available_ports": 200,
+      "created_at": "2025-09-15 16:43:19",
+      "current_subdomains": 0,
+      "description": "Updated test parent domain description",
+      "domain": "testparent1757954548.com",
+      "example_subdomain": "myapp.testparent1757954548.com",
+      "id": "testparent1757954548.com",
+      "name": "testparent1757954548.com",
+      "port_range": [
+        4001,
+        4200
+      ],
+      "port_range_end": 4200,
+      "port_range_start": 4001,
+      "ssl_enabled": true,
+      "status": "active"
+    },
+    {
+      "available_ports": 100,
+      "created_at": "2025-09-25 11:35:50",
+      "current_subdomains": 0,
+      "description": "mysite01 domain",
+      "domain": "mysite01",
+      "example_subdomain": "myapp.mysite01",
+      "id": "mysite01",
+      "name": "mysite01",
+      "port_range": [
+        4201,
+        4300
+      ],
+      "port_range_end": 4300,
+      "port_range_start": 4201,
+      "ssl_enabled": true,
+      "status": "active"
+    },
+    {
+      "available_ports": 100,
+      "created_at": "2025-09-25 17:19:10",
+      "current_subdomains": 0,
+      "description": "mywebsite02 domain",
+      "domain": "mywebsite02",
+      "example_subdomain": "myapp.mywebsite02",
+      "id": "mywebsite02",
+      "name": "mywebsite02",
+      "port_range": [
+        4301,
+        4400
+      ],
+      "port_range_end": 4400,
+      "port_range_start": 4301,
+      "ssl_enabled": true,
+      "status": "active"
+    }
+  ],
+  "success": true,
+  "total_domains": 6
+}
+
+[SUCCESS] Get all parent domains successful
+[TEST] Create new parent domain: POST /api/domains
+Response Code: 200
+Duration: .903089786s
+{
+  "domain": {
+    "domain_name": "testparent1758877434.com",
+    "ssl_enabled": true,
+    "status": "active"
+  },
+  "message": "Domain testparent1758877434.com added successfully",
+  "success": true
+}
+
+[SUCCESS] Create new parent domain successful
+[TEST] Get parent domain details (existing): GET /api/domains/datablox.co.za
+Response Code: 200
+Duration: .870144391s
+{
+  "domain": {
+    "available_ports": 99,
+    "created_at": "2025-09-15 14:07:46",
+    "current_subdomains": 1,
+    "description": "DataBlox domain",
+    "domain_name": "datablox.co.za",
+    "port_range": [
+      3001,
+      3100
+    ],
+    "port_range_end": 3100,
+    "port_range_start": 3001,
+    "ssl_enabled": true,
+    "status": "active",
+    "updated_at": "2025-09-15 14:07:46"
+  },
+  "success": true
+}
+
+[SUCCESS] Get parent domain details (existing) successful
+[TEST] Get parent domain details (new): GET /api/domains/testparent1758877434.com
+Response Code: 200
+Duration: .858825447s
+{
+  "domain": {
+    "available_ports": 100,
+    "created_at": "2025-09-26 09:04:57",
+    "current_subdomains": 0,
+    "description": "Test parent domain for API testing",
+    "domain_name": "testparent1758877434.com",
+    "port_range": [
+      4001,
+      4100
+    ],
+    "port_range_end": 4100,
+    "port_range_start": 4001,
+    "ssl_enabled": true,
+    "status": "active",
+    "updated_at": "2025-09-26 09:04:57"
+  },
+  "success": true
+}
+
+[SUCCESS] Get parent domain details (new) successful
+[TEST] Update parent domain: PUT /api/domains/testparent1758877434.com
+Response Code: 200
+Duration: .870964718s
+{
+  "message": "Domain testparent1758877434.com updated successfully",
+  "success": true
+}
+
+[SUCCESS] Update parent domain successful
+
+================================================
+[SECTION] DOMAIN AVAILABILITY & VALIDATION TESTS
+================================================
+[TEST] Domain availability (subdomain): POST /api/domains/check-availability
+Response Code: 200
+Duration: .950352981s
+{
+  "available": true,
+  "checks": {
+    "database": {
+      "available": true,
+      "details": {},
+      "message": ""
+    },
+    "nginx_available": {
+      "available": true,
+      "details": {
+        "nginx_available": {
+          "available": true,
+          "details": {},
+          "directory": "/etc/nginx/sites-available",
+          "message": ""
+        },
+        "nginx_enabled": {
+          "available": true,
+          "details": {},
+          "directory": "/etc/nginx/sites-enabled",
+          "message": ""
+        }
+      },
+      "message": ""
+    },
+    "nginx_enabled": {
+      "available": true,
+      "details": {},
+      "message": ""
+    }
+  },
+  "domain": "availability-test-1758877434.datablox.co.za",
+  "message": "Domain availability-test-1758877434.datablox.co.za is available for deployment",
+  "ready_for_deployment": true,
+  "status": "available",
+  "success": true
+}
+
+[SUCCESS] Domain availability (subdomain) successful
+[TEST] Domain availability (simple): POST /api/domains/check-availability
+Response Code: 200
+Duration: .887917576s
+{
+  "available": true,
+  "checks": {
+    "database": {
+      "available": true,
+      "details": {},
+      "message": ""
+    },
+    "nginx_available": {
+      "available": true,
+      "details": {
+        "nginx_available": {
+          "available": true,
+          "details": {},
+          "directory": "/etc/nginx/sites-available",
+          "message": ""
+        },
+        "nginx_enabled": {
+          "available": true,
+          "details": {},
+          "directory": "/etc/nginx/sites-enabled",
+          "message": ""
+        }
+      },
+      "message": ""
+    },
+    "nginx_enabled": {
+      "available": true,
+      "details": {},
+      "message": ""
+    }
+  },
+  "domain": "simple-test-1758877434.datablox.co.za",
+  "message": "Domain simple-test-1758877434.datablox.co.za is available for deployment",
+  "ready_for_deployment": true,
+  "status": "available",
+  "success": true
+}
+
+[SUCCESS] Domain availability (simple) successful
+[TEST] Domain validation only: POST /api/domains/validate
+Response Code: 200
+Duration: 1.208620685s
+{
+  "domain": "validation-test-1758877434.datablox.co.za",
+  "is_available": true,
+  "success": true,
+  "validation_results": {
+    "checks": {
+      "database": {
+        "details": null,
+        "exists": false
+      },
+      "filesystem": {
+        "details": null,
+        "exists": false
+      },
+      "nginx_available": {
+        "details": null,
+        "exists": false
+      },
+      "nginx_enabled": {
+        "details": null,
+        "exists": false
+      },
+      "processes": {
+        "details": null,
+        "exists": false
+      }
+    },
+    "conflicts": [],
+    "domain": "validation-test-1758877434.datablox.co.za",
+    "is_available": true,
+    "timestamp": "2025-09-26T11:05:04.079731"
+  }
+}
+
+[SUCCESS] Domain validation only successful
+
+================================================
+[SECTION] SUBDOMAIN MANAGEMENT TESTS (CRUD)
+================================================
+[TEST] List subdomains: GET /api/domains/subdomains?parent_domain=datablox.co.za
+Response Code: 200
+Duration: .870774221s
+{
+  "count": 1,
+  "domains": [
+    {
+      "created_at": "2025-09-21 12:36:28",
+      "domain_name": "manager.datablox.co.za",
+      "port": 5000,
+      "site_type": "api",
+      "ssl_enabled": false,
+      "status": "active"
+    }
+  ],
+  "filters": {
+    "parent_domain": "datablox.co.za",
+    "status": "active"
+  },
+  "success": true
+}
+
+[SUCCESS] List subdomains successful
+[TEST] List all subdomains: GET /api/domains/subdomains
+Response Code: 200
+Duration: .853386781s
+{
+  "count": 3,
+  "domains": [
+    {
+      "created_at": "2025-09-21 12:36:28",
+      "domain_name": "manager.datablox.co.za",
+      "port": 5000,
+      "site_type": "api",
+      "ssl_enabled": false,
+      "status": "active"
+    },
+    {
+      "created_at": "2025-09-09 13:03:22",
+      "domain_name": "testapp.smartwave.co.za",
+      "port": 3005,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "active"
+    },
+    {
+      "created_at": "2025-09-09 12:51:52",
+      "domain_name": "smartwave.co.za",
+      "port": 3000,
+      "site_type": "node",
+      "ssl_enabled": false,
+      "status": "active"
+    }
+  ],
+  "filters": {
+    "parent_domain": null,
+    "status": "active"
+  },
+  "success": true
+}
+
+[SUCCESS] List all subdomains successful
+[TEST] Create subdomain: POST /api/domains/subdomains
+Response Code: 200
+Duration: 1.264186051s
+{
+  "app_name": "test-app-1758877434",
+  "domain": "test1758877434.datablox.co.za",
+  "message": "Subdomain test1758877434.datablox.co.za created successfully",
+  "parent_domain": "datablox.co.za",
+  "port": 3009,
+  "subdomain": "test1758877434",
+  "success": true,
+  "url": "http://test1758877434.datablox.co.za",
+  "validation_passed": true
+}
+
+[SUCCESS] Create subdomain successful
+[TEST] Get subdomain details: GET /api/domains/subdomains/test1758877434.datablox.co.za
+Response Code: 200
+Duration: .863638249s
+{
+  "subdomain": {
+    "created_at": "2025-09-26 09:05:07",
+    "domain_name": "test1758877434.datablox.co.za",
+    "parent_domain": "datablox.co.za",
+    "port": 3009,
+    "site_type": "node",
+    "ssl_enabled": false,
+    "status": "active",
+    "subdomain": "test1758877434",
+    "updated_at": "2025-09-26 09:05:07",
+    "url": "http://test1758877434.datablox.co.za"
+  },
+  "success": true
+}
+
+[SUCCESS] Get subdomain details successful
+[TEST] Update subdomain: PUT /api/domains/subdomains/test1758877434.datablox.co.za
+Response Code: 200
+Duration: .888049930s
+{
+  "message": "Subdomain test1758877434.datablox.co.za updated successfully",
+  "subdomain": "test1758877434.datablox.co.za",
+  "success": true
+}
+
+[SUCCESS] Update subdomain successful
+
+================================================
+[SECTION] DEPLOYMENT TESTS (FIXED)
+================================================
+[TEST] Deploy Next.js app with subdomain: POST /api/deploy/nodejs-subdomain
+Response Code: 400
+Duration: 1.147722809s
+{
+  "error": {
+    "error": "Domain test1758877434.datablox.co.za cannot be deployed due to existing conflicts:\n  • Database: Domain exists (Status: active, Port: 3333, Created: 2025-09-26 09:05:07)\n  • Nginx Config: Configuration file exists (/etc/nginx/sites-available/test1758877434.datablox.co.za, 476 bytes)\n  • Nginx Enabled: Site is actively configured (/etc/nginx/sites-enabled/test1758877434.datablox.co.za)\n  • Files: Domain directory exists (/tmp/www/domains/test1758877434.datablox.co.za, 1 files)\n\nPlease clean up existing resources before deploying, or use the cleanup endpoint:\nPOST /api/domains/test1758877434.datablox.co.za/cleanup",
+    "message": "Cannot deploy test1758877434.datablox.co.za - conflicts detected",
+    "validation_results": {
+      "checks": {
+        "database": {
+          "details": {
+            "created_at": "2025-09-26 09:05:07",
+            "domain_name": "test1758877434.datablox.co.za",
+            "port": 3333,
+            "site_type": "app",
+            "status": "active",
+            "updated_at": "2025-09-26 09:05:09"
+          },
+          "exists": true
+        },
+        "filesystem": {
+          "details": {
+            "file_count": 1,
+            "modified": "2025-09-26T11:05:07.803334",
+            "path": "/tmp/www/domains/test1758877434.datablox.co.za",
+            "size_bytes": 1624
+          },
+          "exists": true
+        },
+        "nginx_available": {
+          "details": {
+            "is_symlink": false,
+            "modified": "2025-09-26T11:05:07.804334",
+            "path": "/etc/nginx/sites-available/test1758877434.datablox.co.za",
+            "size": 476
+          },
+          "exists": true
+        },
+        "nginx_enabled": {
+          "details": {
+            "is_symlink": true,
+            "modified": "2025-09-26T11:05:07.804334",
+            "path": "/etc/nginx/sites-enabled/test1758877434.datablox.co.za",
+            "size": 476,
+            "target": "/etc/nginx/sites-available/test1758877434.datablox.co.za",
+            "target_exists": true
+          },
+          "exists": true
+        },
+        "processes": {
+          "details": null,
+          "exists": false
+        }
+      },
+      "conflicts": [
+        {
+          "details": {
+            "created": "2025-09-26 09:05:07",
+            "port": 3333,
+            "status": "active"
+          },
+          "message": "Domain test1758877434.datablox.co.za already exists in database",
+          "source": "database",
+          "type": "domain_exists"
+        },
+        {
+          "details": {
+            "modified": "2025-09-26T11:05:07.804334",
+            "path": "/etc/nginx/sites-available/test1758877434.datablox.co.za",
+            "size": 476
+          },
+          "message": "Nginx config already exists: /etc/nginx/sites-available/test1758877434.datablox.co.za",
+          "source": "nginx_available",
+          "type": "config_exists"
+        },
+        {
+          "details": {
+            "is_symlink": true,
+            "modified": "2025-09-26T11:05:07.804334",
+            "path": "/etc/nginx/sites-enabled/test1758877434.datablox.co.za",
+            "size": 476,
+            "target": "/etc/nginx/sites-available/test1758877434.datablox.co.za",
+            "target_exists": true
+          },
+          "message": "Nginx config already enabled: /etc/nginx/sites-enabled/test1758877434.datablox.co.za",
+          "source": "nginx_enabled",
+          "type": "config_enabled"
+        },
+        {
+          "details": {
+            "file_count": 1,
+            "modified": "2025-09-26T11:05:07.803334",
+            "path": "/tmp/www/domains/test1758877434.datablox.co.za",
+            "size_bytes": 1624
+          },
+          "message": "Domain directory already exists: /tmp/www/domains/test1758877434.datablox.co.za",
+          "source": "filesystem",
+          "type": "directory_exists"
+        }
+      ],
+      "domain": "test1758877434.datablox.co.za",
+      "is_available": false,
+      "timestamp": "2025-09-26T11:05:11.037652"
+    }
+  },
+  "success": false
+}
+
+[WARNING] Deploy Next.js app with subdomain returned validation conflict (400) - this might be expected
+[TEST] Deploy Express app with root domain: POST /api/deploy/nodejs-subdomain
+Response Code: 500
+Duration: 53.227859854s
+{
+  "error": "App deployment failed: Failed to install dependencies or build application",
+  "success": false
+}
+
+[ERROR] Deploy Express app with root domain failed (expected 200, got 500)
+
+================================================
+[SECTION] CLEANUP & DELETION TESTS
+================================================
+[TEST] Domain cleanup candidates: GET /api/domains/cleanup
+Response Code: 200
+Duration: 2.289827495s
+{
+  "active_processes": 0,
+  "domains": [
+    {
+      "app_name": "test1758877434",
+      "can_cleanup": true,
+      "cleanup_components": [
+        "database",
+        "processes",
+        "nginx",
+        "files"
+      ],
+      "created_at": "2025-09-26 09:05:07",
+      "domain_name": "test1758877434.datablox.co.za",
+      "port": 3333,
+      "process_count": 0,
+      "processes": [],
+      "status": "active"
+    },
+    {
+      "app_name": "manager",
+      "can_cleanup": true,
+      "cleanup_components": [
+        "database",
+        "processes",
+        "nginx",
+        "files"
+      ],
+      "created_at": "2025-09-21 12:36:28",
+      "domain_name": "manager.datablox.co.za",
+      "port": 5000,
+      "process_count": 0,
+      "processes": [],
+      "status": "active"
+    },
+    {
+      "app_name": "testapp",
+      "can_cleanup": true,
+      "cleanup_components": [
+        "database",
+        "processes",
+        "nginx",
+        "files"
+      ],
+      "created_at": "2025-09-09 13:03:22",
+      "domain_name": "testapp.smartwave.co.za",
+      "port": 3005,
+      "process_count": 0,
+      "processes": [],
+      "status": "active"
+    },
+    {
+      "app_name": "smartwave",
+      "can_cleanup": true,
+      "cleanup_components": [
+        "database",
+        "processes",
+        "nginx",
+        "files"
+      ],
+      "created_at": "2025-09-09 12:51:52",
+      "domain_name": "smartwave.co.za",
+      "port": 3000,
+      "process_count": 0,
+      "processes": [],
+      "status": "active"
+    }
+  ],
+  "success": true,
+  "timestamp": "2025-09-26T11:06:07.314437",
+  "total_count": 4
+}
+
+[SUCCESS] Domain cleanup candidates successful
+[TEST] Cleanup specific domain: POST /api/domains/test1758877434.datablox.co.za/cleanup
+Response Code: 200
+Duration: 1.204394965s
+{
+  "details": {
+    "components_cleaned": [
+      "files",
+      "database"
+    ],
+    "domain": "test1758877434.datablox.co.za",
+    "errors": [
+      "Nginx config test failed: 2025/09/26 11:06:08 [emerg] 936470#936470: open() \"/etc/nginx/sites-enabled/test1758877434.datablox.co.za\" failed (2: No such file or directory) in /etc/nginx/nginx.conf:60\nnginx: configuration file /etc/nginx/nginx.conf test failed\n"
+    ],
+    "removed_files": [
+      "/etc/nginx/sites-available/test1758877434.datablox.co.za",
+      "/tmp/www/domains/test1758877434.datablox.co.za (0.0MB)"
+    ],
+    "stopped_processes": [],
+    "timestamp": "2025-09-26T11:06:08.393574"
+  },
+  "message": "Domain test1758877434.datablox.co.za partially cleaned up (2 components, 1 errors)",
+  "success": true,
+  "summary": {
+    "components_cleaned": 2,
+    "errors": 1,
+    "files_removed": 2,
+    "processes_stopped": 0
+  }
+}
+
+[SUCCESS] Cleanup specific domain successful
+[TEST] Delete subdomain: DELETE /api/domains/subdomains/test1758877434.datablox.co.za
+Response Code: 200
+Duration: 1.185679488s
+{
+  "details": {
+    "components_cleaned": [
+      "files",
+      "database"
+    ],
+    "domain": "test1758877434.datablox.co.za",
+    "errors": [
+      "Nginx config test failed: 2025/09/26 11:06:10 [emerg] 936524#936524: open() \"/etc/nginx/sites-enabled/test1758877434.datablox.co.za\" failed (2: No such file or directory) in /etc/nginx/nginx.conf:60\nnginx: configuration file /etc/nginx/nginx.conf test failed\n"
+    ],
+    "removed_files": [],
+    "stopped_processes": [],
+    "timestamp": "2025-09-26T11:06:09.757604"
+  },
+  "message": "Subdomain test1758877434.datablox.co.za partially deleted (2 components, 1 errors)",
+  "success": true,
+  "summary": {
+    "components_cleaned": 2,
+    "errors": 1,
+    "files_removed": 0,
+    "processes_stopped": 0
+  }
+}
+
+[SUCCESS] Delete subdomain successful
+[TEST] Delete parent domain (force): DELETE /api/domains/testparent1758877434.com?force=true
+Response Code: 200
+Duration: .878638850s
+{
+  "message": "Domain testparent1758877434.com deleted successfully",
+  "success": true
+}
+
+[SUCCESS] Delete parent domain (force) successful
+
+================================================
+[SECTION] UTILITY TESTS
+================================================
+[TEST] Domain system status: GET /api/domains/status
+Response Code: 200
+Duration: .893481773s
+{
+  "active_subdomains": 3,
+  "parent_domains": 6,
+  "success": true,
+  "timestamp": "2025-09-26T11:06:12.292232",
+  "total_subdomains": 3
+}
+
+[SUCCESS] Domain system status successful
+
+================================================
+[SECTION] PROCESS MANAGEMENT TESTS
+================================================
+[TEST] Process details (existing): GET /api/processes/mydomaincom
+Response Code: 200
+Duration: 1.223655305s
+{
+  "process": {
+    "cpu": "1.6%",
+    "create_time": "2025-09-16T13:20:34.010000",
+    "cwd": null,
+    "detailed_metrics": {
+      "connections": 0,
+      "cpu_count": 4,
+      "create_time": "2025-09-16T13:20:34.010000",
+      "memory_percent": 1.16,
+      "open_files": 0,
+      "threads": 11
+    },
+    "health": {
+      "status": "not_monitored"
+    },
+    "logs": [
+      "2025-09-16T13:20:35: \n",
+      "2025-09-16T13:20:35: > simple-business@0.1.0 start\n",
+      "2025-09-16T13:20:35: > next start -p $PORT\n",
+      "2025-09-16T13:20:35: \n",
+      "2025-09-16T13:20:35:    ▲ Next.js 14.0.3\n",
+      "2025-09-16T13:20:35:    - Local:        http://localhost:3005\n",
+      "2025-09-16T13:20:35: \n",
+      "2025-09-16T13:20:36:  ✓ Ready in 989ms\n"
+    ],
+    "memory": "68MB",
+    "memory_percent": 1.16,
+    "name": "mydomaincom",
+    "num_threads": 11,
+    "pid": 3204668,
+    "pm2_id": 10,
+    "port": "3005",
+    "process_manager": "pm2",
+    "restart_count": 0,
+    "status": "online",
+    "type": "unknown",
+    "uptime": 1758021634232
+  },
+  "success": true
+}
+
+[SUCCESS] Process details (existing) successful
+[TEST] Process logs: GET /api/processes/test-process/logs?lines=10
+Response Code: 200
+Duration: 1.524629669s
+{
+  "lines_requested": 10,
+  "logs": [
+    "-- No entries --",
+    ""
+  ],
+  "process_name": "test-process",
+  "success": true
+}
+
+[SUCCESS] Process logs successful
+
+================================================
+[SECTION] PM2 TESTS
+================================================
+[TEST] PM2 process list: GET /api/pm2/list
+Response Code: 200
+Duration: 1.558802453s
+{
+  "count": 5,
+  "processes": [
+    {
+      "monit": {
+        "cpu": 0,
+        "memory": 72347648
+      },
+      "name": "mydomaincom",
+      "pid": 3204668,
+      "pm2_env": {
+        "HOME": "/root",
+        "INVOCATION_ID": "a123b350659c46cb943471d95dcbe8f7",
+        "JOURNAL_STREAM": "8:25161687",
+        "LANG": "C.UTF-8",
+        "LOGNAME": "root",
+        "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+        "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+        "NEXT_TELEMETRY_DISABLED": "1",
+        "NODE_APP_INSTANCE": 0,
+        "NODE_ENV": "production",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+        "PM2_HOME": "/root/.pm2",
+        "PM2_JSON_PROCESSING": "true",
+        "PM2_USAGE": "CLI",
+        "PORT": "3005",
+        "PWD": "/tmp/www/domains/mydomaincom",
+        "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+        "PYTHONUNBUFFERED": "1",
+        "SHELL": "/usr/bin/bash",
+        "SYSTEMD_EXEC_PID": "3187304",
+        "USER": "root",
+        "WERKZEUG_SERVER_FD": "5",
+        "args": [
+          "start"
+        ],
+        "automation": true,
+        "autorestart": true,
+        "autostart": true,
+        "axm_actions": [
+          {
+            "action_name": "km:heapdump",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:stop",
+            "action_type": "internal",
+            "arity": 1
+          },
+          {
+            "action_name": "km:heap:sampling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:heap:sampling:stop",
+            "action_type": "internal",
+            "arity": 1
+          }
+        ],
+        "axm_dynamic": {},
+        "axm_monitor": {
+          "Active handles": {
+            "historic": true,
+            "type": "internal/libuv/handles",
+            "value": 5
+          },
+          "Active requests": {
+            "historic": true,
+            "type": "internal/libuv/requests",
+            "value": 0
+          },
+          "Event Loop Latency": {
+            "historic": true,
+            "type": "internal/libuv/latency/p50",
+            "unit": "ms",
+            "value": "0.56"
+          },
+          "Event Loop Latency p95": {
+            "historic": true,
+            "type": "internal/libuv/latency/p95",
+            "unit": "ms",
+            "value": "2.01"
+          },
+          "Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/total",
+            "unit": "MiB",
+            "value": "19.67"
+          },
+          "Heap Usage": {
+            "historic": true,
+            "type": "internal/v8/heap/usage",
+            "unit": "%",
+            "value": 91.54
+          },
+          "Used Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/used",
+            "unit": "MiB",
+            "value": "18.00"
+          }
+        },
+        "axm_options": {
+          "apm": {
+            "type": "node",
+            "version": "6.1.0"
+          },
+          "catchExceptions": true,
+          "error": true,
+          "feature.profiler.cpu_js": true,
+          "feature.profiler.heapsampling": true,
+          "feature.profiler.heapsnapshot": false,
+          "heapdump": true,
+          "latency": true,
+          "metrics": {
+            "eventLoop": true,
+            "http": true,
+            "network": false,
+            "runtime": true,
+            "v8": true
+          },
+          "module_conf": {},
+          "module_name": "mydomaincom",
+          "module_version": "6.0.10",
+          "profiling": true,
+          "standalone": false
+        },
+        "created_at": 1758021634232,
+        "cwd": "/tmp/www/domains/mydomaincom",
+        "env": {
+          "HOME": "/root",
+          "INVOCATION_ID": "a123b350659c46cb943471d95dcbe8f7",
+          "JOURNAL_STREAM": "8:25161687",
+          "LANG": "C.UTF-8",
+          "LOGNAME": "root",
+          "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+          "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "NODE_ENV": "production",
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+          "PM2_HOME": "/root/.pm2",
+          "PM2_JSON_PROCESSING": "true",
+          "PM2_USAGE": "CLI",
+          "PORT": "3005",
+          "PWD": "/tmp/www/domains/mydomaincom",
+          "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+          "PYTHONUNBUFFERED": "1",
+          "SHELL": "/usr/bin/bash",
+          "SYSTEMD_EXEC_PID": "3187304",
+          "USER": "root",
+          "WERKZEUG_SERVER_FD": "5",
+          "mydomaincom": "{}",
+          "unique_id": "8562969b-2b51-40b5-8f3d-63cdfd196107"
+        },
+        "exec_interpreter": "/usr/local/bin/node",
+        "exec_mode": "fork_mode",
+        "ignore_watch": [
+          ".next",
+          "node_modules"
+        ],
+        "instance_var": "NODE_APP_INSTANCE",
+        "instances": 1,
+        "kill_retry_time": 100,
+        "kill_timeout": 5000,
+        "km_link": false,
+        "listen_timeout": 8000,
+        "log_date_format": "YYYY-MM-DDTHH:mm:ss",
+        "max_memory_restart": 1073741824,
+        "max_restarts": 5,
+        "merge_logs": true,
+        "min_uptime": 10000,
+        "mydomaincom": "{}",
+        "name": "mydomaincom",
+        "namespace": "default",
+        "node_args": [],
+        "node_version": "20.11.1",
+        "pm_cwd": "/tmp/www/domains/mydomaincom",
+        "pm_err_log_path": "/tmp/process-logs/mydomaincom-error.log",
+        "pm_exec_path": "/usr/local/bin/npm",
+        "pm_id": 10,
+        "pm_log_path": "/tmp/process-logs/mydomaincom-combined.log",
+        "pm_out_log_path": "/tmp/process-logs/mydomaincom-out.log",
+        "pm_pid_path": "/root/.pm2/pids/mydomaincom-10.pid",
+        "pm_uptime": 1758021634232,
+        "pmx": true,
+        "restart_delay": 4000,
+        "restart_time": 0,
+        "status": "online",
+        "time": true,
+        "treekill": true,
+        "unique_id": "8562969b-2b51-40b5-8f3d-63cdfd196107",
+        "unstable_restarts": 0,
+        "username": "root",
+        "version": "N/A",
+        "vizion": true,
+        "vizion_running": false,
+        "watch": false,
+        "windowsHide": true
+      },
+      "pm_id": 10
+    },
+    {
+      "monit": {
+        "cpu": 0.6,
+        "memory": 69611520
+      },
+      "name": "databloxcoza",
+      "pid": 3219061,
+      "pm2_env": {
+        "HOME": "/root",
+        "INVOCATION_ID": "a123b350659c46cb943471d95dcbe8f7",
+        "JOURNAL_STREAM": "8:25161687",
+        "LANG": "C.UTF-8",
+        "LOGNAME": "root",
+        "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+        "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+        "NEXT_TELEMETRY_DISABLED": "1",
+        "NODE_APP_INSTANCE": 0,
+        "NODE_ENV": "production",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+        "PM2_HOME": "/root/.pm2",
+        "PM2_JSON_PROCESSING": "true",
+        "PM2_USAGE": "CLI",
+        "PORT": "3003",
+        "PWD": "/tmp/www/domains/databloxcoza",
+        "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+        "PYTHONUNBUFFERED": "1",
+        "SHELL": "/usr/bin/bash",
+        "SYSTEMD_EXEC_PID": "3187304",
+        "USER": "root",
+        "WERKZEUG_SERVER_FD": "5",
+        "args": [
+          "start"
+        ],
+        "automation": true,
+        "autorestart": true,
+        "autostart": true,
+        "axm_actions": [
+          {
+            "action_name": "km:heapdump",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:stop",
+            "action_type": "internal",
+            "arity": 1
+          },
+          {
+            "action_name": "km:heap:sampling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:heap:sampling:stop",
+            "action_type": "internal",
+            "arity": 1
+          }
+        ],
+        "axm_dynamic": {},
+        "axm_monitor": {
+          "Active handles": {
+            "historic": true,
+            "type": "internal/libuv/handles",
+            "value": 5
+          },
+          "Active requests": {
+            "historic": true,
+            "type": "internal/libuv/requests",
+            "value": 0
+          },
+          "Event Loop Latency": {
+            "historic": true,
+            "type": "internal/libuv/latency/p50",
+            "unit": "ms",
+            "value": "0.61"
+          },
+          "Event Loop Latency p95": {
+            "historic": true,
+            "type": "internal/libuv/latency/p95",
+            "unit": "ms",
+            "value": "2.40"
+          },
+          "Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/total",
+            "unit": "MiB",
+            "value": "17.67"
+          },
+          "Heap Usage": {
+            "historic": true,
+            "type": "internal/v8/heap/usage",
+            "unit": "%",
+            "value": 85.98
+          },
+          "Used Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/used",
+            "unit": "MiB",
+            "value": "15.19"
+          }
+        },
+        "axm_options": {
+          "apm": {
+            "type": "node",
+            "version": "6.1.0"
+          },
+          "catchExceptions": true,
+          "error": true,
+          "feature.profiler.cpu_js": true,
+          "feature.profiler.heapsampling": true,
+          "feature.profiler.heapsnapshot": false,
+          "heapdump": true,
+          "latency": true,
+          "metrics": {
+            "eventLoop": true,
+            "http": true,
+            "network": false,
+            "runtime": true,
+            "v8": true
+          },
+          "module_conf": {},
+          "module_name": "databloxcoza",
+          "module_version": "6.0.10",
+          "profiling": true,
+          "standalone": false
+        },
+        "created_at": 1758038749629,
+        "cwd": "/tmp/www/domains/databloxcoza",
+        "databloxcoza": "{}",
+        "env": {
+          "HOME": "/root",
+          "INVOCATION_ID": "a123b350659c46cb943471d95dcbe8f7",
+          "JOURNAL_STREAM": "8:25161687",
+          "LANG": "C.UTF-8",
+          "LOGNAME": "root",
+          "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+          "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "NODE_ENV": "production",
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+          "PM2_HOME": "/root/.pm2",
+          "PM2_JSON_PROCESSING": "true",
+          "PM2_USAGE": "CLI",
+          "PORT": "3003",
+          "PWD": "/tmp/www/domains/databloxcoza",
+          "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+          "PYTHONUNBUFFERED": "1",
+          "SHELL": "/usr/bin/bash",
+          "SYSTEMD_EXEC_PID": "3187304",
+          "USER": "root",
+          "WERKZEUG_SERVER_FD": "5",
+          "databloxcoza": "{}",
+          "unique_id": "7609d25a-64f5-4631-ba96-9c5910a3c2f3"
+        },
+        "exec_interpreter": "/usr/local/bin/node",
+        "exec_mode": "fork_mode",
+        "ignore_watch": [
+          ".next",
+          "node_modules"
+        ],
+        "instance_var": "NODE_APP_INSTANCE",
+        "instances": 1,
+        "kill_retry_time": 100,
+        "kill_timeout": 5000,
+        "km_link": false,
+        "listen_timeout": 8000,
+        "log_date_format": "YYYY-MM-DDTHH:mm:ss",
+        "max_memory_restart": 1073741824,
+        "max_restarts": 5,
+        "merge_logs": true,
+        "min_uptime": 10000,
+        "name": "databloxcoza",
+        "namespace": "default",
+        "node_args": [],
+        "node_version": "20.11.1",
+        "pm_cwd": "/tmp/www/domains/databloxcoza",
+        "pm_err_log_path": "/tmp/process-logs/databloxcoza-error.log",
+        "pm_exec_path": "/usr/local/bin/npm",
+        "pm_id": 19,
+        "pm_log_path": "/tmp/process-logs/databloxcoza-combined.log",
+        "pm_out_log_path": "/tmp/process-logs/databloxcoza-out.log",
+        "pm_pid_path": "/root/.pm2/pids/databloxcoza-19.pid",
+        "pm_uptime": 1758038749629,
+        "pmx": true,
+        "restart_delay": 4000,
+        "restart_time": 0,
+        "status": "online",
+        "time": true,
+        "treekill": true,
+        "unique_id": "7609d25a-64f5-4631-ba96-9c5910a3c2f3",
+        "unstable_restarts": 0,
+        "username": "root",
+        "version": "N/A",
+        "vizion": true,
+        "vizion_running": false,
+        "watch": false,
+        "windowsHide": true
+      },
+      "pm_id": 19
+    },
+    {
+      "monit": {
+        "cpu": 0.3,
+        "memory": 70262784
+      },
+      "name": "datablox-it",
+      "pid": 3330795,
+      "pm2_env": {
+        "HOME": "/root",
+        "INVOCATION_ID": "b8426ae37cc14754a40b6749598a6e86",
+        "JOURNAL_STREAM": "8:25855060",
+        "LANG": "C.UTF-8",
+        "LOGNAME": "root",
+        "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+        "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+        "NEXT_TELEMETRY_DISABLED": "1",
+        "NODE_APP_INSTANCE": 0,
+        "NODE_ENV": "production",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+        "PM2_HOME": "/root/.pm2",
+        "PM2_JSON_PROCESSING": "true",
+        "PM2_USAGE": "CLI",
+        "PORT": "3007",
+        "PWD": "/tmp/www/domains/datablox-it",
+        "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+        "PYTHONUNBUFFERED": "1",
+        "SHELL": "/usr/bin/bash",
+        "SYSTEMD_EXEC_PID": "3239938",
+        "USER": "root",
+        "WERKZEUG_SERVER_FD": "5",
+        "args": [
+          "start"
+        ],
+        "automation": true,
+        "autorestart": true,
+        "autostart": true,
+        "axm_actions": [
+          {
+            "action_name": "km:heapdump",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:stop",
+            "action_type": "internal",
+            "arity": 1
+          },
+          {
+            "action_name": "km:heap:sampling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:heap:sampling:stop",
+            "action_type": "internal",
+            "arity": 1
+          }
+        ],
+        "axm_dynamic": {},
+        "axm_monitor": {
+          "Active handles": {
+            "historic": true,
+            "type": "internal/libuv/handles",
+            "value": 5
+          },
+          "Active requests": {
+            "historic": true,
+            "type": "internal/libuv/requests",
+            "value": 0
+          },
+          "Event Loop Latency": {
+            "historic": true,
+            "type": "internal/libuv/latency/p50",
+            "unit": "ms",
+            "value": "0.59"
+          },
+          "Event Loop Latency p95": {
+            "historic": true,
+            "type": "internal/libuv/latency/p95",
+            "unit": "ms",
+            "value": "2.39"
+          },
+          "Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/total",
+            "unit": "MiB",
+            "value": "17.17"
+          },
+          "Heap Usage": {
+            "historic": true,
+            "type": "internal/v8/heap/usage",
+            "unit": "%",
+            "value": 67.41
+          },
+          "Used Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/used",
+            "unit": "MiB",
+            "value": "11.57"
+          }
+        },
+        "axm_options": {
+          "apm": {
+            "type": "node",
+            "version": "6.1.0"
+          },
+          "catchExceptions": true,
+          "error": true,
+          "feature.profiler.cpu_js": true,
+          "feature.profiler.heapsampling": true,
+          "feature.profiler.heapsnapshot": false,
+          "heapdump": true,
+          "latency": true,
+          "metrics": {
+            "eventLoop": true,
+            "http": true,
+            "network": false,
+            "runtime": true,
+            "v8": true
+          },
+          "module_conf": {},
+          "module_name": "datablox-it",
+          "module_version": "6.0.10",
+          "profiling": true,
+          "standalone": false
+        },
+        "created_at": 1758464975289,
+        "cwd": "/tmp/www/domains/datablox-it",
+        "datablox-it": "{}",
+        "env": {
+          "HOME": "/root",
+          "INVOCATION_ID": "b8426ae37cc14754a40b6749598a6e86",
+          "JOURNAL_STREAM": "8:25855060",
+          "LANG": "C.UTF-8",
+          "LOGNAME": "root",
+          "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+          "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "NODE_ENV": "production",
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+          "PM2_HOME": "/root/.pm2",
+          "PM2_JSON_PROCESSING": "true",
+          "PM2_USAGE": "CLI",
+          "PORT": "3007",
+          "PWD": "/tmp/www/domains/datablox-it",
+          "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+          "PYTHONUNBUFFERED": "1",
+          "SHELL": "/usr/bin/bash",
+          "SYSTEMD_EXEC_PID": "3239938",
+          "USER": "root",
+          "WERKZEUG_SERVER_FD": "5",
+          "datablox-it": "{}",
+          "unique_id": "cfefa2f6-921d-457d-8793-ba1ceb7e865d"
+        },
+        "exec_interpreter": "/usr/local/bin/node",
+        "exec_mode": "fork_mode",
+        "ignore_watch": [
+          ".next",
+          "node_modules"
+        ],
+        "instance_var": "NODE_APP_INSTANCE",
+        "instances": 1,
+        "kill_retry_time": 100,
+        "kill_timeout": 5000,
+        "km_link": false,
+        "listen_timeout": 8000,
+        "log_date_format": "YYYY-MM-DDTHH:mm:ss",
+        "max_memory_restart": 1073741824,
+        "max_restarts": 5,
+        "merge_logs": true,
+        "min_uptime": 10000,
+        "name": "datablox-it",
+        "namespace": "default",
+        "node_args": [],
+        "node_version": "20.11.1",
+        "pm_cwd": "/tmp/www/domains/datablox-it",
+        "pm_err_log_path": "/tmp/process-logs/datablox-it-error.log",
+        "pm_exec_path": "/usr/local/bin/npm",
+        "pm_id": 27,
+        "pm_log_path": "/tmp/process-logs/datablox-it-combined.log",
+        "pm_out_log_path": "/tmp/process-logs/datablox-it-out.log",
+        "pm_pid_path": "/root/.pm2/pids/datablox-it-27.pid",
+        "pm_uptime": 1758464975289,
+        "pmx": true,
+        "restart_delay": 4000,
+        "restart_time": 0,
+        "status": "online",
+        "time": true,
+        "treekill": true,
+        "unique_id": "cfefa2f6-921d-457d-8793-ba1ceb7e865d",
+        "unstable_restarts": 0,
+        "username": "root",
+        "version": "N/A",
+        "vizion": true,
+        "vizion_running": false,
+        "watch": false,
+        "windowsHide": true
+      },
+      "pm_id": 27
+    },
+    {
+      "monit": {
+        "cpu": 0.3,
+        "memory": 205787136
+      },
+      "name": "mysite01",
+      "pid": 1184937,
+      "pm2_env": {
+        "HOME": "/root",
+        "INVOCATION_ID": "235dcc5c45ce425591800c37fb00279c",
+        "JOURNAL_STREAM": "8:38554221",
+        "LANG": "C.UTF-8",
+        "LOGNAME": "root",
+        "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+        "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+        "NEXT_TELEMETRY_DISABLED": "1",
+        "NODE_APP_INSTANCE": 0,
+        "NODE_ENV": "production",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+        "PM2_HOME": "/root/.pm2",
+        "PM2_JSON_PROCESSING": "true",
+        "PM2_USAGE": "CLI",
+        "PORT": "3004",
+        "PWD": "/tmp/www/domains/mysite01",
+        "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+        "PYTHONUNBUFFERED": "1",
+        "SHELL": "/usr/bin/bash",
+        "SYSTEMD_EXEC_PID": "1003381",
+        "USER": "root",
+        "WERKZEUG_SERVER_FD": "5",
+        "args": [
+          "start"
+        ],
+        "automation": true,
+        "autorestart": true,
+        "autostart": true,
+        "axm_actions": [
+          {
+            "action_name": "km:heapdump",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:stop",
+            "action_type": "internal",
+            "arity": 1
+          },
+          {
+            "action_name": "km:heap:sampling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:heap:sampling:stop",
+            "action_type": "internal",
+            "arity": 1
+          }
+        ],
+        "axm_dynamic": {},
+        "axm_monitor": {
+          "Active handles": {
+            "historic": true,
+            "type": "internal/libuv/handles",
+            "value": 5
+          },
+          "Active requests": {
+            "historic": true,
+            "type": "internal/libuv/requests",
+            "value": 0
+          },
+          "Event Loop Latency": {
+            "historic": true,
+            "type": "internal/libuv/latency/p50",
+            "unit": "ms",
+            "value": "0.60"
+          },
+          "Event Loop Latency p95": {
+            "historic": true,
+            "type": "internal/libuv/latency/p95",
+            "unit": "ms",
+            "value": "2.44"
+          },
+          "Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/total",
+            "unit": "MiB",
+            "value": "78.68"
+          },
+          "Heap Usage": {
+            "historic": true,
+            "type": "internal/v8/heap/usage",
+            "unit": "%",
+            "value": 88.12
+          },
+          "Used Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/used",
+            "unit": "MiB",
+            "value": "69.33"
+          }
+        },
+        "axm_options": {
+          "apm": {
+            "type": "node",
+            "version": "6.1.0"
+          },
+          "catchExceptions": true,
+          "error": true,
+          "feature.profiler.cpu_js": true,
+          "feature.profiler.heapsampling": true,
+          "feature.profiler.heapsnapshot": false,
+          "heapdump": true,
+          "latency": true,
+          "metrics": {
+            "eventLoop": true,
+            "http": true,
+            "network": false,
+            "runtime": true,
+            "v8": true
+          },
+          "module_conf": {},
+          "module_name": "mysite01",
+          "module_version": "6.0.10",
+          "profiling": true,
+          "standalone": false
+        },
+        "created_at": 1758800705407,
+        "cwd": "/tmp/www/domains/mysite01",
+        "env": {
+          "HOME": "/root",
+          "INVOCATION_ID": "235dcc5c45ce425591800c37fb00279c",
+          "JOURNAL_STREAM": "8:38554221",
+          "LANG": "C.UTF-8",
+          "LOGNAME": "root",
+          "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+          "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "NODE_ENV": "production",
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+          "PM2_HOME": "/root/.pm2",
+          "PM2_JSON_PROCESSING": "true",
+          "PM2_USAGE": "CLI",
+          "PORT": "3004",
+          "PWD": "/tmp/www/domains/mysite01",
+          "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+          "PYTHONUNBUFFERED": "1",
+          "SHELL": "/usr/bin/bash",
+          "SYSTEMD_EXEC_PID": "1003381",
+          "USER": "root",
+          "WERKZEUG_SERVER_FD": "5",
+          "mysite01": "{}",
+          "unique_id": "d97ed8f4-0330-4bf7-9896-4aa7e5434f21"
+        },
+        "exec_interpreter": "/usr/local/bin/node",
+        "exec_mode": "fork_mode",
+        "ignore_watch": [
+          ".next",
+          "node_modules"
+        ],
+        "instance_var": "NODE_APP_INSTANCE",
+        "instances": 1,
+        "kill_retry_time": 100,
+        "kill_timeout": 5000,
+        "km_link": false,
+        "listen_timeout": 8000,
+        "log_date_format": "YYYY-MM-DDTHH:mm:ss",
+        "max_memory_restart": 1073741824,
+        "max_restarts": 5,
+        "merge_logs": true,
+        "min_uptime": 10000,
+        "mysite01": "{}",
+        "name": "mysite01",
+        "namespace": "default",
+        "node_args": [],
+        "node_version": "20.11.1",
+        "pm_cwd": "/tmp/www/domains/mysite01",
+        "pm_err_log_path": "/tmp/process-logs/mysite01-error.log",
+        "pm_exec_path": "/usr/local/bin/npm",
+        "pm_id": 28,
+        "pm_log_path": "/tmp/process-logs/mysite01-combined.log",
+        "pm_out_log_path": "/tmp/process-logs/mysite01-out.log",
+        "pm_pid_path": "/root/.pm2/pids/mysite01-28.pid",
+        "pm_uptime": 1758800705407,
+        "pmx": true,
+        "restart_delay": 4000,
+        "restart_time": 0,
+        "status": "online",
+        "time": true,
+        "treekill": true,
+        "unique_id": "d97ed8f4-0330-4bf7-9896-4aa7e5434f21",
+        "unstable_restarts": 0,
+        "username": "root",
+        "version": "N/A",
+        "vizion": true,
+        "vizion_running": false,
+        "watch": false,
+        "windowsHide": true
+      },
+      "pm_id": 28
+    },
+    {
+      "monit": {
+        "cpu": 0.6,
+        "memory": 84115456
+      },
+      "name": "mywebsite02",
+      "pid": 2412801,
+      "pm2_env": {
+        "HOME": "/root",
+        "INVOCATION_ID": "31f03b228a4b4651b5b605391eb0f4a6",
+        "JOURNAL_STREAM": "8:41042334",
+        "LANG": "C.UTF-8",
+        "LOGNAME": "root",
+        "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+        "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+        "NEXT_TELEMETRY_DISABLED": "1",
+        "NODE_APP_INSTANCE": 0,
+        "NODE_ENV": "production",
+        "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+        "PM2_HOME": "/root/.pm2",
+        "PM2_JSON_PROCESSING": "true",
+        "PM2_USAGE": "CLI",
+        "PORT": "3008",
+        "PWD": "/tmp/www/domains/mywebsite02",
+        "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+        "PYTHONUNBUFFERED": "1",
+        "SHELL": "/usr/bin/bash",
+        "SYSTEMD_EXEC_PID": "2403397",
+        "USER": "root",
+        "WERKZEUG_SERVER_FD": "5",
+        "args": [
+          "start"
+        ],
+        "automation": true,
+        "autorestart": true,
+        "autostart": true,
+        "axm_actions": [
+          {
+            "action_name": "km:heapdump",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:cpu:profiling:stop",
+            "action_type": "internal",
+            "arity": 1
+          },
+          {
+            "action_name": "km:heap:sampling:start",
+            "action_type": "internal",
+            "arity": 2
+          },
+          {
+            "action_name": "km:heap:sampling:stop",
+            "action_type": "internal",
+            "arity": 1
+          }
+        ],
+        "axm_dynamic": {},
+        "axm_monitor": {
+          "Active handles": {
+            "historic": true,
+            "type": "internal/libuv/handles",
+            "value": 5
+          },
+          "Active requests": {
+            "historic": true,
+            "type": "internal/libuv/requests",
+            "value": 0
+          },
+          "Event Loop Latency": {
+            "historic": true,
+            "type": "internal/libuv/latency/p50",
+            "unit": "ms",
+            "value": "0.54"
+          },
+          "Event Loop Latency p95": {
+            "historic": true,
+            "type": "internal/libuv/latency/p95",
+            "unit": "ms",
+            "value": "2.34"
+          },
+          "Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/total",
+            "unit": "MiB",
+            "value": "22.68"
+          },
+          "Heap Usage": {
+            "historic": true,
+            "type": "internal/v8/heap/usage",
+            "unit": "%",
+            "value": 94.84
+          },
+          "Used Heap Size": {
+            "historic": true,
+            "type": "internal/v8/heap/used",
+            "unit": "MiB",
+            "value": "21.51"
+          }
+        },
+        "axm_options": {
+          "apm": {
+            "type": "node",
+            "version": "6.1.0"
+          },
+          "catchExceptions": true,
+          "error": true,
+          "feature.profiler.cpu_js": true,
+          "feature.profiler.heapsampling": true,
+          "feature.profiler.heapsnapshot": false,
+          "heapdump": true,
+          "latency": true,
+          "metrics": {
+            "eventLoop": true,
+            "http": true,
+            "network": false,
+            "runtime": true,
+            "v8": true
+          },
+          "module_conf": {},
+          "module_name": "mywebsite02",
+          "module_version": "6.0.10",
+          "profiling": true,
+          "standalone": false
+        },
+        "created_at": 1758820813007,
+        "cwd": "/tmp/www/domains/mywebsite02",
+        "env": {
+          "HOME": "/root",
+          "INVOCATION_ID": "31f03b228a4b4651b5b605391eb0f4a6",
+          "JOURNAL_STREAM": "8:41042334",
+          "LANG": "C.UTF-8",
+          "LOGNAME": "root",
+          "MEMORY_PRESSURE_WATCH": "/sys/fs/cgroup/system.slice/hosting-manager.service/memory.pressure",
+          "MEMORY_PRESSURE_WRITE": "c29tZSAyMDAwMDAgMjAwMDAwMAA=",
+          "NEXT_TELEMETRY_DISABLED": "1",
+          "NODE_ENV": "production",
+          "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/snap/bin",
+          "PM2_HOME": "/root/.pm2",
+          "PM2_JSON_PROCESSING": "true",
+          "PM2_USAGE": "CLI",
+          "PORT": "3008",
+          "PWD": "/tmp/www/domains/mywebsite02",
+          "PYTHONPATH": "/opt/hosting-manager:/opt/hosting-manager/src",
+          "PYTHONUNBUFFERED": "1",
+          "SHELL": "/usr/bin/bash",
+          "SYSTEMD_EXEC_PID": "2403397",
+          "USER": "root",
+          "WERKZEUG_SERVER_FD": "5",
+          "mywebsite02": "{}",
+          "unique_id": "62721180-d7bc-4c9a-8fb9-3c695e8af8dc"
+        },
+        "exec_interpreter": "/usr/local/bin/node",
+        "exec_mode": "fork_mode",
+        "ignore_watch": [
+          ".next",
+          "node_modules"
+        ],
+        "instance_var": "NODE_APP_INSTANCE",
+        "instances": 1,
+        "kill_retry_time": 100,
+        "kill_timeout": 5000,
+        "km_link": false,
+        "listen_timeout": 8000,
+        "log_date_format": "YYYY-MM-DDTHH:mm:ss",
+        "max_memory_restart": 1073741824,
+        "max_restarts": 5,
+        "merge_logs": true,
+        "min_uptime": 10000,
+        "mywebsite02": "{}",
+        "name": "mywebsite02",
+        "namespace": "default",
+        "node_args": [],
+        "node_version": "20.11.1",
+        "pm_cwd": "/tmp/www/domains/mywebsite02",
+        "pm_err_log_path": "/tmp/process-logs/mywebsite02-error.log",
+        "pm_exec_path": "/usr/local/bin/npm",
+        "pm_id": 29,
+        "pm_log_path": "/tmp/process-logs/mywebsite02-combined.log",
+        "pm_out_log_path": "/tmp/process-logs/mywebsite02-out.log",
+        "pm_pid_path": "/root/.pm2/pids/mywebsite02-29.pid",
+        "pm_uptime": 1758820813007,
+        "pmx": true,
+        "restart_delay": 4000,
+        "restart_time": 0,
+        "status": "online",
+        "time": true,
+        "treekill": true,
+        "unique_id": "62721180-d7bc-4c9a-8fb9-3c695e8af8dc",
+        "unstable_restarts": 0,
+        "username": "root",
+        "version": "N/A",
+        "vizion": true,
+        "vizion_running": false,
+        "watch": false,
+        "windowsHide": true
+      },
+      "pm_id": 29
+    }
+  ],
+  "success": true,
+  "timestamp": "2025-09-26T11:06:18.615509"
+}
+
+[SUCCESS] PM2 process list successful
+
+================================================
+[SECTION] GENERAL UTILITY TESTS
+================================================
+[TEST] Check available ports: POST /api/check-ports
+Response Code: 200
+Duration: 1.053198663s
+{
+  "availablePorts": [],
+  "method": "netstat",
+  "success": true,
+  "totalAvailable": 0,
+  "totalChecked": 5
+}
+
+[SUCCESS] Check available ports successful
+[TEST] Deployment logs: GET /api/logs?limit=10
+Response Code: 200
+Duration: .868659006s
+{
+  "count": 10,
+  "filters": {
+    "action": null,
+    "domain": null,
+    "limit": 10,
+    "status": null
+  },
+  "logs": [
+    {
+      "action": "remove",
+      "created_at": "2025-09-26 09:06:10",
+      "details": null,
+      "domain_name": "test1758877434.datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-26 09:06:08",
+      "details": null,
+      "domain_name": "test1758877434.datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "deploy",
+      "created_at": "2025-09-26 09:05:07",
+      "details": null,
+      "domain_name": "test1758877434.datablox.co.za",
+      "message": "Domain deployed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 14:28:43",
+      "details": null,
+      "domain_name": "datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 14:17:51",
+      "details": null,
+      "domain_name": "datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 13:47:21",
+      "details": null,
+      "domain_name": "datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 13:02:56",
+      "details": null,
+      "domain_name": "datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 12:38:40",
+      "details": null,
+      "domain_name": "nextjs-test.datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 12:38:39",
+      "details": null,
+      "domain_name": "working-test.datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    },
+    {
+      "action": "remove",
+      "created_at": "2025-09-21 11:22:22",
+      "details": null,
+      "domain_name": "working123.datablox.co.za",
+      "message": "Domain removed successfully",
+      "status": "success"
+    }
+  ],
+  "success": true,
+  "timestamp": "2025-09-26T11:06:21.393901"
+}
+
+[SUCCESS] Deployment logs successful
+[TEST] Deployment logs (filtered): GET /api/logs?limit=5&action=deploy
+Response Code: 200
+Duration: .863529620s
+{
+  "count": 5,
+  "filters": {
+    "action": "deploy",
+    "domain": null,
+    "limit": 5,
+    "status": null
+  },
+  "logs": [
+    {
+      "action": "deploy",
+      "created_at": "2025-09-26 09:05:07",
+      "details": null,
+      "domain_name": "test1758877434.datablox.co.za",
+      "message": "Domain deployed successfully",
+      "status": "success"
+    },
+    {
+      "action": "deploy",
+      "created_at": "2025-09-15 17:23:02",
+      "details": null,
+      "domain_name": "test1757956918.datablox.co.za",
+      "message": "Domain deployed successfully",
+      "status": "success"
+    },
+    {
+      "action": "deploy",
+      "created_at": "2025-09-15 16:43:27",
+      "details": null,
+      "domain_name": "test1757954548.datablox.co.za",
+      "message": "Domain deployed successfully",
+      "status": "success"
+    },
+    {
+      "action": "deploy",
+      "created_at": "2025-09-15 16:41:52",
+      "details": null,
+      "domain_name": "test1757954455.datablox.co.za",
+      "message": "Domain deployed successfully",
+      "status": "success"
+    },
+    {
+      "action": "deploy",
+      "created_at": "2025-09-15 16:31:54",
+      "details": null,
+      "domain_name": "test1757953855.datablox.co.za",
+      "message": "Domain deployed successfully",
+      "status": "success"
+    }
+  ],
+  "success": true,
+  "timestamp": "2025-09-26T11:06:22.382588"
+}
+
+[SUCCESS] Deployment logs (filtered) successful
+[SUCCESS] Test results saved to: api_test_results_20250926_110354.txt

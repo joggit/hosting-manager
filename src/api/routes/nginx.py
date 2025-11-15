@@ -111,10 +111,16 @@ class NginxService:
             # Get nginx sites
             nginx_sites = self._get_nginx_sites()
 
-            # Merge information
+            # ✅ NEW: Get PM2 processes
+            pm2_processes = self._get_pm2_processes()
+
+            # Merge information from all sources
             all_site_names = set()
             all_site_names.update([site["domain_name"] for site in db_sites])
             all_site_names.update([site["name"] for site in nginx_sites])
+            all_site_names.update(
+                [proc["name"] for proc in pm2_processes]
+            )  # ✅ ADD THIS
 
             for site_name in all_site_names:
                 # Find in database
@@ -127,10 +133,16 @@ class NginxService:
                     (s for s in nginx_sites if s["name"] == site_name), None
                 )
 
+                # ✅ NEW: Find in PM2
+                pm2_process = next(
+                    (p for p in pm2_processes if p["name"] == site_name), None
+                )
+
                 site_info = {
                     "domain_name": site_name,
                     "in_database": db_site is not None,
                     "in_nginx": nginx_site is not None,
+                    "in_pm2": pm2_process is not None,  # ✅ ADD THIS
                     "status": "unknown",
                 }
 
@@ -154,11 +166,25 @@ class NginxService:
                         }
                     )
 
+                # ✅ NEW: Add PM2 process info
+                if pm2_process:
+                    site_info.update(
+                        {
+                            "pm2_process": pm2_process,
+                            "port": pm2_process.get("port") or site_info.get("port"),
+                            "process_status": pm2_process.get("status", "unknown"),
+                        }
+                    )
+
                 # Determine overall status
                 if db_site and nginx_site:
                     site_info["status"] = (
                         "active" if db_site["status"] == "active" else db_site["status"]
                     )
+                elif (
+                    pm2_process and pm2_process.get("status") == "online"
+                ):  # ✅ ADD THIS
+                    site_info["status"] = "active"
                 elif db_site:
                     site_info["status"] = "database_only"
                 elif nginx_site:
@@ -718,6 +744,48 @@ class NginxService:
                     addresses.append(f"{conn.laddr.ip}:{conn.laddr.port}")
             return list(set(addresses))
         except:
+            return []
+
+    def _get_pm2_processes(self):
+        """Get running PM2 processes"""
+        try:
+            import subprocess
+            import json
+
+            result = subprocess.run(
+                ["pm2", "jlist"], capture_output=True, text=True, timeout=5
+            )
+
+            if result.returncode != 0:
+                return []
+
+            processes = json.loads(result.stdout)
+
+            pm2_list = []
+            for proc in processes:
+                pm2_info = {
+                    "name": proc.get("name"),
+                    "pm2_id": proc.get("pm_id"),
+                    "status": proc.get("pm2_env", {}).get("status", "unknown"),
+                    "pid": proc.get("pid"),
+                    "port": None,  # Try to extract from env
+                    "cwd": proc.get("pm2_env", {}).get("pm_cwd"),
+                }
+
+                # Try to get port from environment
+                env = proc.get("pm2_env", {})
+                if "PORT" in env:
+                    try:
+                        pm2_info["port"] = int(env["PORT"])
+                    except:
+                        pass
+
+                pm2_list.append(pm2_info)
+
+            return pm2_list
+
+        except Exception as e:
+            self.logger.error(f"Failed to get PM2 processes: {e}")
             return []
 
     def _get_ssl_certificate_info(self):

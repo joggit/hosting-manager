@@ -368,11 +368,18 @@ class HostingManager:
             return False
 
     def _test_nginx_config(self):
-        """Test nginx configuration"""
+        """Test nginx configuration - returns False on error instead of raising"""
         try:
-            result = subprocess.run(["nginx", "-t"], capture_output=True, text=True)
-            return result.returncode == 0
-        except:
+            result = subprocess.run(
+                ["nginx", "-t"], capture_output=True, text=True, timeout=10
+            )
+            if result.returncode != 0:
+                # Log but don't fail - config might be intentionally removed
+                self.logger.warning(f"Nginx config test failed: {result.stderr}")
+                return False
+            return True
+        except Exception as e:
+            self.logger.warning(f"Nginx config test error: {e}")
             return False
 
     def _create_systemd_service(self):

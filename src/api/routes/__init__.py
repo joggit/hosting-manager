@@ -14,6 +14,7 @@ ROUTE_MODULES = [
     ("api.routes.utils_routes", "register_utility_routes"),
     ("api.routes.network", "register_network_routes"),
     ("api.routes.next_port_management", "register_next_port_management_routes"),
+    ("api.routes.payfast_routes", "register_payfast_routes"),
 ]
 
 
